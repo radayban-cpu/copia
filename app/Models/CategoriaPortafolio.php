@@ -2,14 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CategoriaPortafolio extends Model
 {
-    protected $table = 'categorias_portafolio';
-    public $timestamps = false;
+    use HasFactory;
 
-    public function proyectos()
+    protected $table = 'categorias_portafolio';
+
+    protected $fillable = ['nombre'];
+
+    /**
+     * Define la relación inversa: una categoría tiene muchos portafolios.
+     */
+    public function portafolios()
     {
         return $this->hasMany(Portafolio::class, 'categoria_id');
     }

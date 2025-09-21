@@ -5,6 +5,9 @@ use App\Http\Controllers\PagesController;
 use App\Http\Controllers\Admin\DatoPersonalController;
 use App\Http\Controllers\Admin\ImagenController;
 use App\Http\Controllers\Admin\PortafolioController;
+/** --- INICIO ACTUALIZACIÓN --- */
+use App\Http\Controllers\Admin\ExperienciaController; // ← NUEVO: controlador admin de experiencias
+/** --- FIN ACTUALIZACIÓN --- */
 
 /*
 |--------------------------------------------------------------------------
@@ -35,11 +38,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     })->name('dashboard');
 
     // --- INICIO DE LA ACTUALIZACIÓN ---
-    // Hemos cambiado las rutas manuales por un Route::resource.
-    // Esto crea automáticamente las rutas para:
-    // index, create, store, edit, update.
-    // Con except() evitamos crear rutas que no usaremos (como show o destroy para datos personales).
-    Route::resource('datos-personales', DatoPersonalController::class)->except(['show', 'destroy']);
+    // Resource con parámetro claro para evitar "datos_personale"
+    Route::resource('datos-personales', DatoPersonalController::class)
+        ->except(['show', 'destroy'])
+        ->parameters(['datos-personales' => 'dato_personal']);
     // --- FIN DE LA ACTUALIZACIÓN ---
 
     // Rutas para Imágenes (CRUD completo)
@@ -48,4 +50,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Rutas para Portafolios (CRUD completo)
     Route::resource('portafolios', PortafolioController::class);
 
+    /** --- INICIO ACTUALIZACIÓN --- */
+    // Rutas para Experiencias (CRUD completo)
+    Route::resource('experiencias', ExperienciaController::class); // ← NUEVO
+    /** --- FIN ACTUALIZACIÓN --- */
 });

@@ -20,9 +20,8 @@ class Portafolio extends Model
     ];
 
     /**
-     * --- INICIO DE LA ACTUALIZACIÓN ---
-     * Hacemos la relación explícita y usamos withDefault()
-     * para evitar errores si una categoría no existe.
+     * Define la relación con CategoriaPortafolio.
+     * Usamos withDefault() para que nunca falle si una categoría es eliminada.
      */
     public function categoria()
     {
@@ -30,7 +29,6 @@ class Portafolio extends Model
             'nombre' => 'Sin Categoría'
         ]);
     }
-    // --- FIN DE LA ACTUALIZACIÓN ---
 
     public function datoPersonal()
     {

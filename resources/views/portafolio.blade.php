@@ -29,20 +29,18 @@
       {{-- --- INICIO DE LA ACTUALIZACIÓN --- --}}
       <div class="isotope-layout" data-default-filter="*" data-layout="masonry" data-sort="original-order">
 
-        {{-- Barra de Filtros de Categorías (Dinámica) --}}
+        {{-- Barra de Filtros de Categorías (usa la variable $categorias) --}}
         <ul class="portfolio-filters isotope-filters" data-aos="fade-up" data-aos-delay="100">
           <li data-filter="*" class="filter-active">Todos</li>
-          {{-- Este bucle crea un filtro por cada categoría que le enviamos desde el controlador --}}
           @if(isset($categorias))
             @foreach($categorias as $categoria)
               <li data-filter=".filter-{{ Str::slug($categoria->nombre) }}">{{ $categoria->nombre }}</li>
             @endforeach
           @endif
-        </ul>{{-- Contenedor de Proyectos (Dinámico) --}}
+        </ul>{{-- Contenedor de Proyectos (usa la variable $portafolios) --}}
         <div class="row gy-4 isotope-container" data-aos="fade-up" data-aos-delay="200">
           @if(isset($portafolios))
             @forelse ($portafolios as $item)
-              {{-- La clase del div debe coincidir con el data-filter de su categoría --}}
               <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-{{ Str::slug($item->categoria->nombre) }}">
                 <div class="portfolio-wrap">
                   <img src="{{ asset('storage/' . $item->url_imagen) }}" class="img-fluid" alt="{{ $item->titulo }}">

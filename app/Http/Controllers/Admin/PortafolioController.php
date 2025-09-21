@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Portafolio;
 use App\Models\CategoriaPortafolio;
+use App\Models\DatoPersonal; // <-- Importante añadirlo
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -33,19 +34,29 @@ class PortafolioController extends Controller
      */
     public function store(Request $request)
     {
+        // --- INICIO DE LA ACTUALIZACIÓN ---
         $validatedData = $request->validate([
             'titulo' => 'required|string|max:255',
             'descripcion' => 'required|string',
-            'cliente' => 'required|string|max:255',
-            'url_proyecto' => 'nullable|url|max:255',
             'url_imagen' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'categoria_id' => 'required|exists:categoria_portafolios,id',
+            'categoria_id' => 'required|exists:categorias_portafolio,id',
         ]);
 
-        $path = $request->file('url_imagen')->store('portafolio', 'public');
-        $validatedData['url_imagen'] = $path;
+        $datoPersonal = DatoPersonal::first();
+        if (!$datoPersonal) {
+            return back()->withErrors(['msg' => 'Debes crear tus datos personales antes de añadir un proyecto.'])->withInput();
+        }
 
-        Portafolio::create($validatedData);
+        $path = $request->file('url_imagen')->store('portafolios', 'public');
+
+        Portafolio::create([
+            'titulo' => $validatedData['titulo'],
+            'descripcion' => $validatedData['descripcion'],
+            'url_imagen' => $path,
+            'categoria_id' => $validatedData['categoria_id'],
+            'dato_personal_id' => $datoPersonal->id, // <-- Se añade la relación
+        ]);
+        // --- FIN DE LA ACTUALIZACIÓN ---
 
         return redirect()->route('admin.portafolios.index')->with('success', 'Proyecto creado con éxito.');
     }
@@ -64,22 +75,22 @@ class PortafolioController extends Controller
      */
     public function update(Request $request, Portafolio $portafolio)
     {
+        // --- INICIO DE LA ACTUALIZACIÓN ---
         $validatedData = $request->validate([
             'titulo' => 'required|string|max:255',
             'descripcion' => 'required|string',
-            'cliente' => 'required|string|max:255',
-            'url_proyecto' => 'nullable|url|max:255',
-            'url_imagen' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
-            'categoria_id' => 'required|exists:categoria_portafolios,id',
+            'url_imagen' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048', // Nullable por si no se cambia la imagen
+            'categoria_id' => 'required|exists:categorias_portafolio,id',
         ]);
 
         if ($request->hasFile('url_imagen')) {
             Storage::disk('public')->delete($portafolio->url_imagen);
-            $path = $request->file('url_imagen')->store('portafolio', 'public');
+            $path = $request->file('url_imagen')->store('portafolios', 'public');
             $validatedData['url_imagen'] = $path;
         }
 
         $portafolio->update($validatedData);
+        // --- FIN DE LA ACTUALIZACIÓN ---
 
         return redirect()->route('admin.portafolios.index')->with('success', 'Proyecto actualizado con éxito.');
     }

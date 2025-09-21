@@ -18,15 +18,21 @@ class Imagen extends Model
         'tipo_imagen_id',
     ];
 
-    // Relación: una imagen pertenece a una persona
     public function datoPersonal()
     {
         return $this->belongsTo(DatoPersonal::class);
     }
 
-    // Relación: una imagen pertenece a un tipo (perfil, portada, etc.)
+    /**
+     * --- INICIO DE LA ACTUALIZACIÓN ---
+     * Hacemos la relación explícita y usamos withDefault()
+     * para evitar errores si un tipo de imagen no existe.
+     */
     public function tipo()
     {
-        return $this->belongsTo(TipoImagen::class, 'tipo_imagen_id');
+        return $this->belongsTo(TipoImagen::class, 'tipo_imagen_id')->withDefault([
+            'tipo_imagen' => 'Desconocido'
+        ]);
     }
+    // --- FIN DE LA ACTUALIZACIÓN ---
 }

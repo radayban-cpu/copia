@@ -3,54 +3,66 @@
 namespace App\Http\Controllers;
 
 use App\Models\DatoPersonal;
+use App\Models\Experiencia;
+use App\Models\Habilidad;
 use App\Models\Imagen;
 use App\Models\Portafolio;
-use Illuminate\Http\Request;
+use App\Models\Servicio;
+use App\Models\CategoriaPortafolio;
+use App\Models\TipoImagen; // <-- 1. Importamos el modelo que faltaba
 
 class PagesController extends Controller
 {
     public function inicio()
     {
-        $datoPersonal = DatoPersonal::first();
+        $datos = DatoPersonal::first(); 
         $imagenPerfil = Imagen::where('tipo_imagen_id', 1)->first();
         $imagenMuro = Imagen::where('tipo_imagen_id', 2)->first();
         
-        return view('inicio', compact('datoPersonal', 'imagenPerfil', 'imagenMuro'));
+        return view('inicio', compact('datos', 'imagenPerfil', 'imagenMuro'));
     }
 
     public function acerca()
     {
-        // Lógica para la página "Acerca de"
-        return view('acerca-de');
+        $datos = DatoPersonal::first();
+        return view('acerca-de', compact('datos'));
     }
 
     public function contactos()
     {
-        // Lógica para la página "Contactos"
         return view('contactos');
     }
 
     public function portafolio()
     {
-        $portafolios = Portafolio::with('categoria')->get();
-        return view('portafolio', compact('portafolios'));
+        // --- INICIO DE LA ACTUALIZACIÓN ---
+        // Ahora la función busca todas las IMÁGENES con su TIPO asociado.
+        $imagenes = Imagen::with('tipo')->get();
+        
+        // Y busca la lista completa de TIPOS DE IMAGEN para los filtros.
+        $tipos = TipoImagen::all();
+        
+        // Envía las variables 'imagenes' y 'tipos' a la vista.
+        return view('portafolio', compact('imagenes', 'tipos'));
+        // --- FIN DE LA ACTUALIZACIÓN ---
     }
 
     public function portafolioDetalle()
     {
-        // Lógica para la página "Detalle del Portafolio"
         return view('portafolio-detalle');
     }
 
     public function resumen()
     {
-        // Lógica para la página "Resumen"
-        return view('resumen');
+        $datos = DatoPersonal::first();
+        $experiencias = Experiencia::all();
+        $habilidades = Habilidad::all();
+        return view('resumen', compact('datos', 'experiencias', 'habilidades'));
     }
 
     public function servicios()
     {
-        // Lógica para la página "Servicios"
-        return view('servicios');
+        $servicios = Servicio::all();
+        return view('servicios', compact('servicios'));
     }
 }

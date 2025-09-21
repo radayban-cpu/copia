@@ -8,37 +8,59 @@ use Illuminate\Http\Request;
 
 class DatoPersonalController extends Controller
 {
-    /**
-     * Muestra la lista de datos personales.
-     */
     public function index()
     {
         $datos = DatoPersonal::first();
+        if (!$datos) {
+            return redirect()->route('admin.datos-personales.create');
+        }
         return view('admin.datos-personales.index', compact('datos'));
     }
 
-    /**
-     * Muestra el formulario para editar los datos personales.
-     */
+    public function create()
+    {
+        return view('admin.datos-personales.create');
+    }
+
+    public function store(Request $request)
+    {
+        // --- INICIO DE LA ACTUALIZACIÓN ---
+        $validatedData = $request->validate([
+            'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
+            'descripcion' => 'required|string|max:125',
+            'fecha_nacimiento' => 'required|date',
+            'ciudad_domicilio' => 'required|string|max:255',
+            'carrera' => 'nullable|string|max:255', // Campo nuevo
+            'frase' => 'nullable|string|max:255',   // Campo nuevo
+            'edad' => 'nullable|integer',           // Campo nuevo
+        ]);
+        // --- FIN DE LA ACTUALIZACIÓN ---
+
+        DatoPersonal::create($validatedData);
+
+        return redirect()->route('admin.datos-personales.index')->with('success', 'Datos personales creados con éxito.');
+    }
+
     public function edit(DatoPersonal $dato_personal)
     {
         return view('admin.datos-personales.edit', compact('dato_personal'));
     }
 
-    /**
-     * Actualiza los datos personales en la base de datos.
-     */
     public function update(Request $request, DatoPersonal $dato_personal)
     {
+        // --- INICIO DE LA ACTUALIZACIÓN ---
         $validatedData = $request->validate([
-            'titulo' => 'required|string|max:255',
-            'subtitulo' => 'required|string|max:255',
-            'descripcion' => 'required|string',
-            'ciudad' => 'required|string|max:255',
-            'edad' => 'required|integer',
-            'carrera' => 'required|string|max:255',
-            'frase' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255',
+            'apellido' => 'required|string|max:255',
+            'descripcion' => 'required|string|max:125',
+            'fecha_nacimiento' => 'required|date',
+            'ciudad_domicilio' => 'required|string|max:255',
+            'carrera' => 'nullable|string|max:255', // Campo nuevo
+            'frase' => 'nullable|string|max:255',   // Campo nuevo
+            'edad' => 'nullable|integer',           // Campo nuevo
         ]);
+        // --- FIN DE LA ACTUALIZACIÓN ---
 
         $dato_personal->update($validatedData);
 

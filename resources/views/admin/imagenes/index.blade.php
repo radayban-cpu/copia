@@ -4,34 +4,55 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Gestión de Imágenes</h2>
-        <a href="{{ route('admin.imagenes.create') }}" class="btn btn-success">Subir Nueva Imagen</a>
+        <a href="{{ route('admin.imagenes.create') }}" class="btn btn-primary">Subir Nueva Imagen</a>
     </div>
 
-    @if(session('success'))
+    @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <div class="row">
-        @forelse($imagenes as $imagen)
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                <img src="{{ asset('storage/' . $imagen->ruta) }}" class="card-img-top" alt="{{ $imagen->descripcion }}">
-                <div class="card-body">
-                    <h5 class="card-title">{{ $imagen->descripcion }}</h5>
-                    <p class="card-text"><strong>Tipo:</strong> {{ $imagen->tipo->nombre ?? 'N/A' }}</p>
-                    <form action="{{ route('admin.imagenes.destroy', $imagen->id) }}" method="POST" class="d-inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar esta imagen?')">Eliminar</button>
-                    </form>
-                </div>
-            </div>
+    <div class="card">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">Imagen</th>
+                        <th>Descripción</th>
+                        <th style="width: 15%;">Tipo</th>
+                        <th class="text-end" style="width: 20%;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse ($imagenes as $imagen)
+                        <tr>
+                            <td>
+                                <img src="{{ asset('storage/' . $imagen->ruta) }}" alt="{{ $imagen->descripcion }}" class="img-thumbnail" width="100">
+                            </td>
+                            <td>{{ $imagen->descripcion ?? 'Sin descripción' }}</td>
+                            <td>
+                                {{-- --- INICIO DE LA ACTUALIZACIÓN --- --}}
+                                <span class="badge bg-secondary">{{ $imagen->tipo->tipo_imagen }}</span>
+                                {{-- --- FIN DE LA ACTUALIZACIÓN --- --}}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group" role="group">
+                                    <a href="{{ route('admin.imagenes.edit', $imagen->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                                    <form action="{{ route('admin.imagenes.destroy', $imagen->id) }}" method="POST" onsubmit="return confirm('¿Estás seguro?');" style="display: inline-block;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center">No hay imágenes subidas todavía.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-        @empty
-        <div class="col-12">
-            <div class="alert alert-info">No hay imágenes para mostrar. Sube una nueva imagen para empezar.</div>
-        </div>
-        @endforelse
     </div>
 </div>
 @endsection

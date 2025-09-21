@@ -2,170 +2,69 @@
 
 <header id="header" class="header d-flex align-items-center light-background sticky-top">
   <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
-
     <a href="{{ url('/') }}" class="logo d-flex align-items-center me-auto me-xl-0">
-      {{-- <img src="{{ asset('assets/img/logo.png') }}" alt=""> --}}
       <h1 class="sitename">Kelly</h1>
     </a>
-
-    {{-- Componente en kebab-case --}}
     <x-nav-bar />
-
     <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
-
     <div class="header-social-links">
       <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
       <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
       <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
       <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
     </div>
-
   </div>
 </header>
 
 <main class="main">
 
-  <!-- Portfolio Section -->
   <section id="portfolio" class="portfolio section">
 
-    <!-- Section Title -->
     <div class="container section-title" data-aos="fade-up">
       <h2>Portfolio</h2>
-      <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
+      <p>Aquí puedes ver algunos de mis proyectos más recientes. Cada uno representa un desafío único y una oportunidad para crecer.</p>
     </div>
-    <!-- End Section Title -->
 
     <div class="container">
-
+      {{-- --- INICIO DE LA ACTUALIZACIÓN --- --}}
       <div class="isotope-layout" data-default-filter="*" data-layout="masonry" data-sort="original-order">
 
+        {{-- Barra de Filtros de Categorías (Dinámica) --}}
         <ul class="portfolio-filters isotope-filters" data-aos="fade-up" data-aos-delay="100">
-          <li data-filter="*" class="filter-active">All</li>
-          <li data-filter=".filter-app">App</li>
-          <li data-filter=".filter-product">Card</li>
-          <li data-filter=".filter-branding">Web</li>
-        </ul>
-        <!-- End Portfolio Filters -->
-
+          <li data-filter="*" class="filter-active">Todos</li>
+          {{-- Este bucle crea un filtro por cada categoría que le enviamos desde el controlador --}}
+          @if(isset($categorias))
+            @foreach($categorias as $categoria)
+              <li data-filter=".filter-{{ Str::slug($categoria->nombre) }}">{{ $categoria->nombre }}</li>
+            @endforeach
+          @endif
+        </ul>{{-- Contenedor de Proyectos (Dinámico) --}}
         <div class="row gy-4 isotope-container" data-aos="fade-up" data-aos-delay="200">
-
-          <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-app">
-            <img src="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-1.jpg') }}" class="img-fluid" alt="">
-            <div class="portfolio-info">
-              <h4>App 1</h4>
-              <p>Lorem ipsum, dolor sit</p>
-              <a href="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-1.jpg') }}" title="App 1" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-              <a href="{{ url('/portafolio/detalle') }}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
-            </div>
-          </div>
-          <!-- End Portfolio Item -->
-
-          <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-product">
-            <img src="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-2.jpg') }}" class="img-fluid" alt="">
-            <div class="portfolio-info">
-              <h4>Product 1</h4>
-              <p>Lorem ipsum, dolor sit</p>
-              <a href="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-2.jpg') }}" title="Product 1" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-              <a href="{{ url('/portafolio/detalle') }}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
-            </div>
-          </div>
-          <!-- End Portfolio Item -->
-
-          <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-branding">
-            <img src="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-3.jpg') }}" class="img-fluid" alt="">
-            <div class="portfolio-info">
-              <h4>Branding 1</h4>
-              <p>Lorem ipsum, dolor sit</p>
-              <a href="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-3.jpg') }}" title="Branding 1" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-              <a href="{{ url('/portafolio/detalle') }}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
-            </div>
-          </div>
-          <!-- End Portfolio Item -->
-
-          <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-app">
-            <img src="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-4.jpg') }}" class="img-fluid" alt="">
-            <div class="portfolio-info">
-              <h4>App 2</h4>
-              <p>Lorem ipsum, dolor sit</p>
-              <a href="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-4.jpg') }}" title="App 2" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-              <a href="{{ url('/portafolio/detalle') }}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
-            </div>
-          </div>
-          <!-- End Portfolio Item -->
-
-          <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-product">
-            <img src="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-5.jpg') }}" class="img-fluid" alt="">
-            <div class="portfolio-info">
-              <h4>Product 2</h4>
-              <p>Lorem ipsum, dolor sit</p>
-              <a href="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-5.jpg') }}" title="Product 2" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-              <a href="{{ url('/portafolio/detalle') }}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
-            </div>
-          </div>
-          <!-- End Portfolio Item -->
-
-          <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-branding">
-            <img src="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-6.jpg') }}" class="img-fluid" alt="">
-            <div class="portfolio-info">
-              <h4>Branding 2</h4>
-              <p>Lorem ipsum, dolor sit</p>
-              <a href="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-6.jpg') }}" title="Branding 2" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-              <a href="{{ url('/portafolio/detalle') }}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
-            </div>
-          </div>
-          <!-- End Portfolio Item -->
-
-          <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-app">
-            <img src="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-7.jpg') }}" class="img-fluid" alt="">
-            <div class="portfolio-info">
-              <h4>App 3</h4>
-              <p>Lorem ipsum, dolor sit</p>
-              <a href="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-7.jpg') }}" title="App 3" data-gallery="portfolio-gallery-app" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-              <a href="{{ url('/portafolio/detalle') }}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
-            </div>
-          </div>
-          <!-- End Portfolio Item -->
-
-          <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-product">
-            <img src="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-8.jpg') }}" class="img-fluid" alt="">
-            <div class="portfolio-info">
-              <h4>Product 3</h4>
-              <p>Lorem ipsum, dolor sit</p>
-              <a href="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-8.jpg') }}" title="Product 3" data-gallery="portfolio-gallery-product" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-              <a href="{{ url('/portafolio/detalle') }}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
-            </div>
-          </div>
-          <!-- End Portfolio Item -->
-
-          <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-branding">
-            <img src="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-9.jpg') }}" class="img-fluid" alt="">
-            <div class="portfolio-info">
-              <h4>Branding 3</h4>
-              <p>Lorem ipsum, dolor sit</p>
-              <a href="{{ asset('assets/img/masonry-portfolio/masonry-portfolio-9.jpg') }}" title="Branding 3" data-gallery="portfolio-gallery-branding" class="glightbox preview-link"><i class="bi bi-zoom-in"></i></a>
-              <a href="{{ url('/portafolio/detalle') }}" title="More Details" class="details-link"><i class="bi bi-link-45deg"></i></a>
-            </div>
-          </div>
-          <!-- End Portfolio Item -->
-
-        </div>
-        <!-- End Portfolio Container -->
-
-      </div>
-
+          @if(isset($portafolios))
+            @forelse ($portafolios as $item)
+              {{-- La clase del div debe coincidir con el data-filter de su categoría --}}
+              <div class="col-lg-4 col-md-6 portfolio-item isotope-item filter-{{ Str::slug($item->categoria->nombre) }}">
+                <div class="portfolio-wrap">
+                  <img src="{{ asset('storage/' . $item->url_imagen) }}" class="img-fluid" alt="{{ $item->titulo }}">
+                  <div class="portfolio-info">
+                    <h4>{{ $item->titulo }}</h4>
+                    <p>{{ $item->categoria->nombre }}</p>
+                    <div class="portfolio-links">
+                      <a href="{{ asset('storage/' . $item->url_imagen) }}" data-gallery="portfolio-gallery-app" class="glightbox" title="{{ $item->titulo }}"><i class="bi bi-plus"></i></a>
+                      <a href="#" title="More Details" class="details-link"><i class="bi bi-link"></i></a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            @empty
+              <div class="col-12 text-center">
+                <p>No hay proyectos cargados en este momento.</p>
+              </div>
+            @endforelse
+          @endif
+        </div></div>
+      {{-- --- FIN DE LA ACTUALIZACIÓN --- --}}
     </div>
-
-  </section>
-  <!-- /Portfolio Section -->
-
-</main>
+  </section></main>
 
 <x-footer />
-
-<!-- Scroll Top -->
-<a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center">
-  <i class="bi bi-arrow-up-short"></i>
-</a>
-
-<!-- Preloader -->
-<div id="preloader"></div>

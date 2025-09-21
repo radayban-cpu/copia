@@ -10,21 +10,27 @@ class Portafolio extends Model
     use HasFactory;
 
     protected $table = 'portafolios';
-    public $timestamps = false; 
 
     protected $fillable = [
         'titulo',
         'descripcion',
-        'cliente',
-        'url_proyecto',
         'url_imagen',
         'categoria_id',
+        'dato_personal_id',
     ];
 
+    /**
+     * --- INICIO DE LA ACTUALIZACIÓN ---
+     * Hacemos la relación explícita y usamos withDefault()
+     * para evitar errores si una categoría no existe.
+     */
     public function categoria()
     {
-        return $this->belongsTo(CategoriaPortafolio::class, 'categoria_id');
+        return $this->belongsTo(CategoriaPortafolio::class, 'categoria_id')->withDefault([
+            'nombre' => 'Sin Categoría'
+        ]);
     }
+    // --- FIN DE LA ACTUALIZACIÓN ---
 
     public function datoPersonal()
     {

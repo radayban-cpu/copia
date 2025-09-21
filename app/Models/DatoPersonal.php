@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace App\Models; // <-- ESTA LÍNEA ES LA CORRECCIÓN
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,14 +11,18 @@ class DatoPersonal extends Model
 
     protected $table = 'datos_personales';
 
+    /**
+     * Los atributos que se pueden asignar masivamente.
+     */
     protected $fillable = [
-        'titulo',
-        'subtitulo',
+        'nombre',
+        'apellido',
         'descripcion',
-        'ciudad',
-        'edad',
+        'fecha_nacimiento',
+        'ciudad_domicilio',
         'carrera',
         'frase',
+        'edad',
     ];
 
     public function habilidades()

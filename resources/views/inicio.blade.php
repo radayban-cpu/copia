@@ -1,12 +1,15 @@
-{{-- resources/views/inicio.blade.php --}}
 <x-layout />
 
 <header id="header" class="header d-flex align-items-center light-background sticky-top">
   <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
 
     <a href="/" class="logo d-flex align-items-center me-auto me-xl-0">
-      {{-- <img src="{{ asset('assets/img/logo.png') }}" alt=""> --}}
+      {{-- Usar el logo dinámico si existe --}}
+      @if($imagenPerfil)
+      <img src="{{ asset('storage/' . $imagenPerfil->ruta) }}" alt="Foto de perfil">
+      @else
       <h1 class="sitename">Kelly</h1>
+      @endif
     </a>
 
     {{-- Navbar (usar kebab-case) --}}
@@ -26,29 +29,35 @@
 
 <main class="main">
 
-  <!-- Hero Section -->
   <section id="hero" class="hero section">
-    <img src="{{ asset('assets/img/hero-bg.jpg') }}" alt="" data-aos="fade-in">
+    @if($imagenMuro)
+    <img src="{{ asset('storage/' . $imagenMuro->ruta) }}" alt="Imagen de muro" data-aos="fade-in">
+    @else
+    {{-- Si no hay imagen de muro, puedes usar una por defecto --}}
+    <img src="{{ asset('assets/img/hero-bg.jpg') }}" alt="Imagen de muro por defecto" data-aos="fade-in">
+    @endif
     <div class="container text-center" data-aos="zoom-out" data-aos-delay="100">
       <div class="row justify-content-center">
         <div class="col-lg-8">
-          <h2>Kelly Adams</h2>
-          <p>Soy ilustradora profesional con base en San Francisco</p>
+          @if($datoPersonal)
+          <h2>{{ $datoPersonal->titulo }}</h2>
+          <p>Soy <span class="typed" data-typed-items="{{ $datoPersonal->subtitulo }}"></span></p>
           <a href="/acerca-de" class="btn-get-started">Sobre mí</a>
+          @else
+          <h2>¡Bienvenido!</h2>
+          <p>Aún no hay datos personales para mostrar. Por favor, añádelos en el panel de administración.</p>
+          <a href="/acerca-de" class="btn-get-started">Sobre mí</a>
+          @endif
         </div>
       </div>
     </div>
   </section>
-  <!-- /Hero Section -->
-
-</main>
+  </main>
 
 <x-footer />
 
-<!-- Scroll Top -->
 <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center">
   <i class="bi bi-arrow-up-short"></i>
 </a>
 
-<!-- Preloader -->
-<div id="preloader"></div>
+<div id="preloader"></div>p

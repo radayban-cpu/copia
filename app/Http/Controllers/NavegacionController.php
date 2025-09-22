@@ -25,45 +25,36 @@ class NavegacionController extends Controller
     {
         $dato = DatoPersonal::first();
 
-        // Imagen de perfil por nombre de tipo ("Perfil")
         $profileImage = $dato
             ? Imagen::where('dato_personal_id', $dato->id)
-                ->whereHas('tipo', fn($q) => $q->where('tipo_imagen', 'Perfil'))
+                ->whereHas('tipo', function ($query) {
+                    $query->whereRaw('LOWER(tipo_imagen) = ?', ['perfil']);
+                })
                 ->first()
             : null;
 
-        // Habilidades
         $habilidades = $dato
             ? Habilidad::where('dato_personal_id', $dato->id)->get()
             : collect();
-
-        // Comentarios + cliente
         $comentarios = $dato
             ? Comentario::with('cliente')->where('dato_personal_id', $dato->id)->get()
             : collect();
-
-        // Contactos → mapear a email/telefono/website
         $contactos = $dato
             ? Contacto::with('tipo')->where('dato_personal_id', $dato->id)->get()
             : collect();
 
         $contactMap = $contactos->mapWithKeys(function ($c) {
-            $clave = Str::slug(optional($c->tipo)->nombre ?? 'otro'); // email, whatsapp, linkedin, ...
+            $clave = Str::slug(optional($c->tipo)->nombre ?? 'otro');
             return [$clave => $c->valor];
         });
 
-        // Perfil
-        $perfil = $dato
-            ? Perfil::where('dato_personal_id', $dato->id)->first()
-            : null;
+        $perfil = $dato ? Perfil::where('dato_personal_id', $dato->id)->first() : null;
 
-        // Atributos virtuales que el Blade usa
         if ($dato) {
             $edad = null;
             if (!empty($dato->fecha_nacimiento)) {
                 try { $edad = Carbon::parse($dato->fecha_nacimiento)->age; } catch (\Throwable $e) {}
             }
-
             $dato->setAttribute('edad', $edad);
             $dato->setAttribute('email', $contactMap['email'] ?? null);
             $dato->setAttribute('telefono', $contactMap['whatsapp'] ?? null);
@@ -84,10 +75,15 @@ class NavegacionController extends Controller
     {
         $dato = DatoPersonal::first();
 
-        // Portada por nombre ("Portada") para evitar depender del ID 2
-        $heroImage = Imagen::whereHas('tipo', fn($q) => $q->where('tipo_imagen', 'Portada'))->first();
+        $imagenMuro = Imagen::whereHas('tipo', function ($query) {
+            $query->whereRaw('LOWER(tipo_imagen) = ?', ['portada']);
+        })->latest()->first();
 
-        return view('inicio', compact('dato', 'heroImage'));
+        $imagenPerfil = Imagen::whereHas('tipo', function ($query) {
+            $query->whereRaw('LOWER(tipo_imagen) = ?', ['perfil']);
+        })->latest()->first();
+
+        return view('inicio', compact('dato', 'imagenMuro', 'imagenPerfil'));
     }
 
     /**
@@ -96,40 +92,29 @@ class NavegacionController extends Controller
     public function resumen()
     {
         $dato = DatoPersonal::first();
-
-        // Traer experiencias
         $experiencias = $dato
             ? Experiencia::where('dato_personal_id', $dato->id)->orderBy('fecha_inicio', 'desc')->get()
             : collect();
 
-        // --------- FIX 1: completar datos del $dato que la vista usa ---------
         if ($dato) {
             $contactos = Contacto::with('tipo')->where('dato_personal_id', $dato->id)->get();
             $contactMap = $contactos->mapWithKeys(function ($c) {
-                $clave = Str::slug(optional($c->tipo)->nombre ?? 'otro'); // email, whatsapp, linkedin
+                $clave = Str::slug(optional($c->tipo)->nombre ?? 'otro');
                 return [$clave => $c->valor];
             });
-
             $dato->setAttribute('email', $contactMap['email'] ?? null);
             $dato->setAttribute('telefono', $contactMap['whatsapp'] ?? null);
         }
 
-        // --------- FIX 2: normalizar tipo_experiencia_id para que coincida con el Blade ---------
-        // El Blade asume: 1 = Profesional, 2 = Educación.
-        // En tu DB hay: 'laboral', 'profesional', 'educativo', 'cultural'.
-        $tipos = DB::table('tipos_experiencias')->pluck('nombre', 'id'); // [id => nombre]
+        $tipos = DB::table('tipos_experiencias')->pluck('nombre', 'id');
         $experiencias->each(function ($e) use ($tipos, $dato) {
             $nombreTipo = strtolower($tipos[$e->tipo_experiencia_id] ?? '');
-
             if (in_array($nombreTipo, ['profesional', 'laboral'])) {
-                $e->tipo_experiencia_id = 1; // Profesional
+                $e->tipo_experiencia_id = 1;
             } elseif (in_array($nombreTipo, ['educativo', 'educacion', 'educación'])) {
-                $e->tipo_experiencia_id = 2; // Educación
+                $e->tipo_experiencia_id = 2;
             }
-
-            // --------- FIX 3: fallback para 'lugar' (no existe en la tabla) ---------
             if (!isset($e->lugar) || $e->lugar === null) {
-                // Usamos ciudad de domicilio como ubicación por defecto
                 $e->setAttribute('lugar', $dato?->ciudad_domicilio ?? '');
             }
         });
@@ -147,7 +132,8 @@ class NavegacionController extends Controller
             ? Servicio::where('dato_personal_id', $dato->id)->get()
             : collect();
 
-        return view('servicio', compact('servicios'));
+        // El nombre de la vista debe ser 'servicios', no 'servicio'
+        return view('servicios', compact('servicios'));
     }
 
     /**
@@ -159,9 +145,7 @@ class NavegacionController extends Controller
         $proyectos = $dato
             ? Portafolio::where('dato_personal_id', $dato->id)->get()
             : collect();
-
         $categorias = CategoriaPortafolio::all();
-
         return view('portafolio', compact('proyectos', 'categorias'));
     }
 
@@ -171,19 +155,16 @@ class NavegacionController extends Controller
     public function contacto()
     {
         $dato = DatoPersonal::first();
-
-        // Completar email/telefono que el Blade muestra
         if ($dato) {
             $contactos = Contacto::with('tipo')->where('dato_personal_id', $dato->id)->get();
             $contactMap = $contactos->mapWithKeys(function ($c) {
                 $clave = Str::slug(optional($c->tipo)->nombre ?? 'otro');
                 return [$clave => $c->valor];
             });
-
             $dato->setAttribute('email', $contactMap['email'] ?? null);
             $dato->setAttribute('telefono', $contactMap['whatsapp'] ?? null);
         }
-
         return view('contacto', compact('dato'));
     }
 }
+

@@ -20,9 +20,11 @@ class PagesController extends Controller
     {
         $datoPersonal = DatoPersonal::first();
 
-        // URLs normalizadas desde BD por tipo ('perfil' y 'muro')
+        // --- INICIO DE LA ACTUALIZACIÓN ---
+        // Se busca el tipo de imagen 'portada', que es el nombre correcto en la base de datos.
         $imagenPerfil = $this->getImagenUrlPorTipo('perfil');
-        $imagenMuro   = $this->getImagenUrlPorTipo('muro');
+        $imagenMuro   = $this->getImagenUrlPorTipo('portada'); // <-- ESTA ES LA ÚNICA LÍNEA CAMBIADA
+        // --- FIN DE LA ACTUALIZACIÓN ---
 
         return view('inicio', [
             'datoPersonal' => $datoPersonal,
@@ -38,7 +40,7 @@ class PagesController extends Controller
         $datoPersonal = DatoPersonal::first();
 
         $imagenPerfil = $this->getImagenUrlPorTipo('perfil');
-        $imagenMuro   = $this->getImagenUrlPorTipo('muro');
+        $imagenMuro   = $this->getImagenUrlPorTipo('portada'); // Corregido aquí también por consistencia
 
         return view('acerca-de', [
             'datoPersonal' => $datoPersonal,
@@ -61,8 +63,6 @@ class PagesController extends Controller
 
     /**
      * Página pública de Portafolio.
-     * - Pasa $categorias y $portafolios (con relación 'categoria')
-     * - Soporta filtro por ?categoria={slug}
      */
     public function portafolio(Request $request)
     {
@@ -99,7 +99,6 @@ class PagesController extends Controller
 
     /**
      * Detalle de un proyecto del portafolio.
-     * Recomendado: usar slug en la ruta: /portafolio/{slug}
      */
     public function portafolioDetalle(string $slug = null)
     {
@@ -124,13 +123,9 @@ class PagesController extends Controller
     public function resumen()
     {
         $datoPersonal = DatoPersonal::first();
-
-        // Experiencias (con tipo), ordenadas por fin o inicio más reciente
         $experiencias = Experiencia::with('tipo')
             ->orderByRaw('COALESCE(fecha_fin, fecha_inicio) DESC')
             ->get();
-
-        // Si la vista muestra tabs/filtros por tipo
         $tipos = TipoExperiencia::orderBy('nombre')->get();
 
         return view('resumen', [
@@ -159,10 +154,14 @@ class PagesController extends Controller
 
     /**
      * Devuelve el nombre de la columna de texto en tipos_imagenes
-     * (por ejemplo: nombre, tipo, name, titulo, slug). Si no encuentra, retorna null.
      */
     private function tipoImagenNombreCol(): ?string
     {
+        // Se usa 'tipo_imagen' directamente ya que conocemos el nombre de la columna
+        if (Schema::hasColumn('tipos_imagenes', 'tipo_imagen')) {
+            return 'tipo_imagen';
+        }
+        // Fallback por si cambia el nombre en el futuro
         foreach (['nombre', 'tipo', 'name', 'titulo', 'slug'] as $col) {
             if (Schema::hasColumn('tipos_imagenes', $col)) {
                 return $col;
@@ -172,22 +171,20 @@ class PagesController extends Controller
     }
 
     /**
-     * Busca la última imagen por tipo ("perfil" | "muro") y devuelve la URL pública.
-     * Evita ambigüedad en ORDER BY calificando la columna.
+     * Busca la última imagen por tipo y devuelve la URL pública.
      */
     private function getImagenUrlPorTipo(string $nombreTipo): ?string
     {
         $col = $this->tipoImagenNombreCol();
+        if (!$col) {
+            return null; // No se puede buscar si no se encuentra la columna de nombre
+        }
 
         $query = Imagen::query()
             ->select('imagenes.ruta')
-            ->join('tipos_imagenes', 'tipos_imagenes.id', '=', 'imagenes.tipo_imagen_id');
-
-        if ($col) {
-            $query->whereRaw("LOWER(tipos_imagenes.$col) = ?", [Str::lower($nombreTipo)]);
-        }
-
-        // Evitar "ambiguous column name: created_at" al usar JOIN
+            ->join('tipos_imagenes', 'tipos_imagenes.id', '=', 'imagenes.tipo_imagen_id')
+            ->whereRaw("LOWER(tipos_imagenes.$col) = ?", [Str::lower($nombreTipo)]);
+        
         if (Schema::hasColumn('imagenes', 'created_at')) {
             $query->orderByDesc('imagenes.created_at');
         } else {
@@ -202,12 +199,11 @@ class PagesController extends Controller
 
         $ruta = (string) $img->ruta;
 
-        // Si ya es URL absoluta o ruta absoluta, devolver tal cual.
         if (Str::startsWith($ruta, ['http://', 'https://', '/'])) {
             return $ruta;
         }
 
-        // Si es una ruta relativa (storage público)
         return asset('storage/' . ltrim($ruta, '/'));
     }
 }
+

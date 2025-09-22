@@ -13,14 +13,10 @@ class ImagenController extends Controller
 {
     public function index()
     {
-        // --- INICIO DE LA ACTUALIZACIÓN ---
-        // Usamos el nombre correcto de la relación: 'tipo'
         $imagenes = Imagen::with('tipo')->get();
-        // --- FIN DE LA ACTUALIZACIÓN ---
         return view('admin.imagenes.index', compact('imagenes'));
     }
 
-    // ... (El resto de los métodos se mantienen igual)
     public function create()
     {
         $tipos = TipoImagen::all();
@@ -52,29 +48,48 @@ class ImagenController extends Controller
         return redirect()->route('admin.imagenes.index')->with('success', 'Imagen subida con éxito.');
     }
 
-    public function edit(Imagen $imagene)
+    // --- INICIO DE LA ACTUALIZACIÓN (BUENA PRÁCTICA) ---
+    // Cambiamos $imagene por $imagen para seguir la convención de Laravel
+    public function edit(Imagen $imagen)
     {
         $tipos = TipoImagen::all();
-        return view('admin.imagenes.edit', ['imagen' => $imagene, 'tipos' => $tipos]);
+        // Pasamos la variable a la vista como 'imagen'
+        return view('admin.imagenes.edit', compact('imagen', 'tipos'));
     }
 
-    public function update(Request $request, Imagen $imagene)
+    // Cambiamos $imagene por $imagen
+    public function update(Request $request, Imagen $imagen)
     {
         $request->validate([
+            'ruta' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'descripcion' => 'nullable|string|max:255',
             'tipo_imagen_id' => 'required|exists:tipos_imagenes,id',
         ]);
 
-        $imagene->update($request->only(['descripcion', 'tipo_imagen_id']));
+        $data = $request->only(['descripcion', 'tipo_imagen_id']);
+
+        if ($request->hasFile('ruta')) {
+            if ($imagen->ruta) {
+                Storage::disk('public')->delete($imagen->ruta);
+            }
+            $path = $request->file('ruta')->store('imagenes', 'public');
+            $data['ruta'] = $path;
+        }
+
+        $imagen->update($data);
 
         return redirect()->route('admin.imagenes.index')->with('success', 'Imagen actualizada con éxito.');
     }
 
-    public function destroy(Imagen $imagene)
+    // Cambiamos $imagene por $imagen
+    public function destroy(Imagen $imagen)
     {
-        Storage::disk('public')->delete($imagene->ruta);
-        $imagene->delete();
+        if ($imagen->ruta) {
+            Storage::disk('public')->delete($imagen->ruta);
+        }
+        $imagen->delete();
 
         return redirect()->route('admin.imagenes.index')->with('success', 'Imagen eliminada con éxito.');
     }
+    // --- FIN DE LA ACTUALIZACIÓN ---
 }

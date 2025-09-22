@@ -4,7 +4,6 @@
 <div class="container mt-4">
     <h2>Subir Nueva Imagen</h2>
 
-    {{-- --- INICIO DE LA ACTUALIZACIÓN --- --}}
     {{-- Bloque para mostrar errores de validación generales --}}
     @if ($errors->any())
         <div class="alert alert-danger mt-3">
@@ -21,7 +20,6 @@
     @if (session('error'))
         <div class="alert alert-danger mt-3">{{ session('error') }}</div>
     @endif
-    {{-- --- FIN DE LA ACTUALIZACIÓN --- --}}
 
     <form action="{{ route('admin.imagenes.store') }}" method="POST" enctype="multipart/form-data">
         @csrf

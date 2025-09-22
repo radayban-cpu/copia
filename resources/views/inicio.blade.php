@@ -1,29 +1,32 @@
 {{-- resources/views/inicio.blade.php --}}
 
 @php
-  // Compatibilidad: usar $datos si existe, si no $datoPersonal
-  $datos = $datos ?? ($datoPersonal ?? null);
+    // --- INICIO DE LA ACTUALIZACIÓN ---
 
-  // Helper local para convertir rutas relativas de storage a URL completas
-  $toUrl = function ($path, $default) {
-      if (empty($path)) return $default;
-      $s = (string)$path;
-      if (str_starts_with($s, 'http://') || str_starts_with($s, 'https://') || str_starts_with($s, '/')) {
-          return $s; // ya es URL absoluta o ruta absoluta
-      }
-      // ruta relativa (e.g. "imagenes/foto.jpg") -> usar storage público
-      return asset('storage/'.$s);
-  };
+    // Asignar el dato personal para usarlo en la vista
+    $datos = $datos ?? ($datoPersonal ?? null);
 
-  // Normalizar imágenes (permitir string URL o path de storage)
-  $imagenPerfil = $toUrl($imagenPerfil ?? null, asset('images/avatar.png'));
-  $imagenMuro   = $toUrl($imagenMuro   ?? null, asset('assets/img/hero-bg.jpg'));
+    // Determinar la URL de la imagen de Perfil
+    // Si la variable $imagenPerfil existe (vino del controller), usa su ruta.
+    // Si no, usa una imagen por defecto.
+    $urlImagenPerfil = isset($imagenPerfil) && !empty($imagenPerfil->ruta)
+        ? asset('storage/' . $imagenPerfil->ruta)
+        : null; // Opcional: asset('assets/img/logo-default.png') si quieres un logo por defecto
 
-  // Ítems del "typed" (sin comas sobrantes)
-  $typedItems = collect([
-      $datos->carrera ?? null,
-      $datos->frase   ?? null,
-  ])->filter()->implode(', ');
+    // Determinar la URL de la imagen de Muro
+    // Si la variable $imagenMuro existe, usa su ruta.
+    // Si no, usa una imagen por defecto.
+    $urlImagenMuro = isset($imagenMuro) && !empty($imagenMuro->ruta)
+        ? asset('storage/' . $imagenMuro->ruta)
+        : asset('assets/img/hero-bg.jpg'); // Imagen de fondo por defecto
+
+    // Ítems para el efecto de texto animado (typed.js)
+    $typedItems = collect([
+        optional($datos)->carrera,
+        optional($datos)->frase,
+    ])->filter()->implode(', ');
+
+    // --- FIN DE LA ACTUALIZACIÓN ---
 @endphp
 
 <x-layout />
@@ -32,11 +35,12 @@
   <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
 
     <a href="{{ url('/') }}" class="logo d-flex align-items-center me-auto me-xl-0">
-      {{-- Logo dinámico (string URL o storage path normalizado) --}}
-      @if(!empty($imagenPerfil))
-        <img src="{{ $imagenPerfil }}" alt="Foto de perfil">
+      {{-- Logo dinámico --}}
+      @if($urlImagenPerfil)
+        <img src="{{ $urlImagenPerfil }}" alt="Foto de perfil">
       @else
-        <h1 class="sitename">Kelly</h1>
+        {{-- Si no hay imagen de perfil, muestra el nombre --}}
+        <h1 class="sitename">{{ optional($datos)->nombre ?? 'Inicio' }}</h1>
       @endif
     </a>
 
@@ -44,6 +48,7 @@
 
     <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
 
+    {{-- Redes sociales (puedes hacerlas dinámicas en el futuro) --}}
     <div class="header-social-links">
       <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
       <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
@@ -57,13 +62,12 @@
 <main class="main">
 
   <section id="hero" class="hero section">
-    {{-- Imagen de muro normalizada --}}
-    <img src="{{ $imagenMuro }}" alt="Imagen de portada" data-aos="fade-in">
+    {{-- Imagen de muro dinámica con fallback --}}
+    <img src="{{ $urlImagenMuro }}" alt="Imagen de portada" data-aos="fade-in">
 
     <div class="container text-center" data-aos="zoom-out" data-aos-delay="100">
       <div class="row justify-content-center">
         <div class="col-lg-8">
-          {{-- --- CONTENIDO DINÁMICO --- --}}
           @if($datos)
             <h2>{{ $datos->nombre }} {{ $datos->apellido }}</h2>
             <p>
@@ -76,7 +80,6 @@
             <p>Aún no hay datos personales para mostrar. Por favor, añádelos en el panel de administración.</p>
             <a href="{{ route('acerca') }}" class="btn-get-started">Sobre mí</a>
           @endif
-          {{-- --- FIN CONTENIDO DINÁMICO --- --}}
         </div>
       </div>
     </div>
@@ -85,8 +88,10 @@
 
 <x-footer />
 
+{{-- Botón para volver arriba --}}
 <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center">
   <i class="bi bi-arrow-up-short"></i>
 </a>
 
+{{-- Preloader --}}
 <div id="preloader"></div>

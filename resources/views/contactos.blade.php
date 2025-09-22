@@ -1,23 +1,66 @@
 <x-layout />
 
+@php
+  use App\Models\DatoPersonal;
+
+  // Trae el perfil con sus contactos y tipos
+  $dp = DatoPersonal::with('contactos.tipoContacto')->first();
+
+  // Mapear contactos por nombre de tipo
+  $byTipo = collect(optional($dp)->contactos ?? [])
+      ->keyBy(fn($c) => optional($c->tipoContacto)->nombre);
+
+  $correo   = optional($byTipo['correo'] ?? null)->valor;
+  $telefono = optional($byTipo['telefono'] ?? null)->valor;
+  $linkedin = optional($byTipo['linkedin'] ?? null)->valor;
+  $mapsUrl  = optional($byTipo['google_maps'] ?? null)->valor;
+
+  /**
+   * Extrae [lat,lng] desde URL de Google Maps.
+   */
+  function gm_extract_latlng(?string $url): ?array {
+      if (!$url) return null;
+      // @LAT,LNG
+      if (preg_match('~@(-?\d+\.\d+),\s*(-?\d+\.\d+)~', $url, $m)) {
+          return [floatval($m[1]), floatval($m[2])];
+      }
+      // !2dLNG!3dLAT
+      if (preg_match('~!2d(-?\d+\.\d+)!3d(-?\d+\.\d+)~', $url, $m)) {
+          return [floatval($m[2]), floatval($m[1])];
+      }
+      // lat= & lng=
+      if (preg_match('~[?&]lat=(-?\d+\.\d+)~', $url, $a) &&
+          preg_match('~[?&]lng=(-?\d+\.\d+)~', $url, $b)) {
+          return [floatval($a[1]), floatval($b[1])];
+      }
+      return null;
+  }
+
+  $coords = gm_extract_latlng($mapsUrl);
+@endphp
+
+{{-- Leaflet para mapa sin iframe --}}
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script defer src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<style>
+  #map { width: 100%; height: 270px; border-radius: 8px; }
+</style>
+
 <header id="header" class="header d-flex align-items-center light-background sticky-top">
   <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
 
     <a href="{{ url('/') }}" class="logo d-flex align-items-center me-auto me-xl-0">
-      {{-- <img src="{{ asset('assets/img/logo.png') }}" alt=""> --}}
       <h1 class="sitename">Kelly</h1>
     </a>
 
-    {{-- El componente es kebab-case --}}
     <x-nav-bar />
 
     <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
 
     <div class="header-social-links">
-      <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
-      <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
-      <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
-      <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+      @if($linkedin)
+        <a href="{{ $linkedin }}" class="linkedin" target="_blank" rel="noopener"><i class="bi bi-linkedin"></i></a>
+      @endif
     </div>
 
   </div>
@@ -30,8 +73,14 @@
 
     <!-- Section Title -->
     <div class="container section-title" data-aos="fade-up">
-      <h2>Contact</h2>
-      <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
+      <h2>Contacto</h2>
+      <p>
+        @if($dp && $dp->frase)
+          {{ $dp->frase }}
+        @else
+          Ponete en contacto para más información.
+        @endif
+      </p>
     </div>
     <!-- End Section Title -->
 
@@ -44,63 +93,84 @@
             <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="200">
               <i class="bi bi-geo-alt flex-shrink-0"></i>
               <div>
-                <h3>Address</h3>
-                <p>A108 Adam Street, New York, NY 535022</p>
+                <h3>Dirección</h3>
+                <p>
+                  @if($dp && $dp->ciudad_domicilio)
+                    {{ $dp->ciudad_domicilio }}
+                  @else
+                    No especificada
+                  @endif
+                </p>
               </div>
             </div><!-- End Info Item -->
 
             <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="300">
               <i class="bi bi-telephone flex-shrink-0"></i>
               <div>
-                <h3>Call Us</h3>
-                <p>+1 5589 55488 55</p>
+                <h3>Teléfono</h3>
+                <p>{{ $telefono ?? '—' }}</p>
               </div>
             </div><!-- End Info Item -->
 
             <div class="info-item d-flex" data-aos="fade-up" data-aos-delay="400">
               <i class="bi bi-envelope flex-shrink-0"></i>
               <div>
-                <h3>Email Us</h3>
-                <p>info@example.com</p>
+                <h3>Correo</h3>
+                <p>{{ $correo ?? '—' }}</p>
               </div>
             </div><!-- End Info Item -->
 
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d48389.78314118045!2d-74.006138!3d40.710059!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25a22a3bda30d%3A0xb89d1fe6bc499443!2sDowntown%20Conference%20Center!5e0!3m2!1sen!2sus!4v1676961268712!5m2!1sen!2sus"
-              frameborder="0" style="border:0; width: 100%; height: 270px;" allowfullscreen
-              loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            @if($coords)
+              <div id="map" data-aos="fade-up" data-aos-delay="450"></div>
+              <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                  const lat = {{ $coords[0] }};
+                  const lng = {{ $coords[1] }};
+                  const map = L.map('map').setView([lat, lng], 15);
+                  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap contributors'
+                  }).addTo(map);
+                  L.marker([lat, lng]).addTo(map);
+                });
+              </script>
+            @elseif($mapsUrl)
+              {{-- Fallback: si no se pueden extraer coords, mostramos link al mapa --}}
+              <a href="{{ $mapsUrl }}" target="_blank" rel="noopener" class="d-inline-block mt-2">Ver en Google Maps</a>
+            @endif
           </div>
         </div>
 
         <div class="col-lg-7">
+          {{-- Mantengo el mismo form, traducido al español --}}
           <form action="{{ asset('forms/contact.php') }}" method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="200">
             <div class="row gy-4">
 
               <div class="col-md-6">
-                <label for="name-field" class="pb-2">Your Name</label>
+                <label for="name-field" class="pb-2">Tu nombre</label>
                 <input type="text" name="name" id="name-field" class="form-control" required>
               </div>
 
               <div class="col-md-6">
-                <label for="email-field" class="pb-2">Your Email</label>
+                <label for="email-field" class="pb-2">Tu correo</label>
                 <input type="email" class="form-control" name="email" id="email-field" required>
               </div>
 
               <div class="col-md-12">
-                <label for="subject-field" class="pb-2">Subject</label>
+                <label for="subject-field" class="pb-2">Asunto</label>
                 <input type="text" class="form-control" name="subject" id="subject-field" required>
               </div>
 
               <div class="col-md-12">
-                <label for="message-field" class="pb-2">Message</label>
+                <label for="message-field" class="pb-2">Mensaje</label>
                 <textarea class="form-control" name="message" rows="10" id="message-field" required></textarea>
               </div>
 
               <div class="col-md-12 text-center">
-                <div class="loading">Loading</div>
+                <div class="loading">Enviando…</div>
                 <div class="error-message"></div>
-                <div class="sent-message">Your message has been sent. Thank you!</div>
-                <button type="submit">Send Message</button>
+                <div class="sent-message">¡Tu mensaje fue enviado. Gracias!</div>
+                <button type="submit">Enviar mensaje</button>
               </div>
 
             </div>

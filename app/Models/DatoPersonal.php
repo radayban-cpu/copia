@@ -31,10 +31,18 @@ class DatoPersonal extends Model
     }
 
     /**
-     * NUEVA RELACIÓN: Un perfil personal tiene muchos servicios.
+     * Un perfil personal tiene muchos servicios.
      */
     public function servicios()
     {
         return $this->hasMany(Servicio::class);
+    }
+
+    /**
+     * Un perfil personal tiene muchos contactos.
+     */
+    public function contactos()
+    {
+        return $this->hasMany(\App\Models\Contacto::class, 'dato_personal_id');
     }
 }

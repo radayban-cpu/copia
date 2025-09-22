@@ -71,6 +71,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Servicios
     Route::resource('servicios', ServicioController::class);
     
-    // --- RUTA DE CONTACTOS RESTAURADA A RESOURCE ---
-    Route::resource('contactos', ContactoController::class);
+   // --- CONTACTOS ---
+    Route::get('contactos', [ContactoController::class, 'index'])->name('contactos.index');
+    Route::get('contactos/create', [ContactoController::class, 'create'])->name('contactos.create');
+    Route::post('contactos', [ContactoController::class, 'store'])->name('contactos.store');
+    Route::get('contactos/{datoPersonal}/edit', [ContactoController::class, 'edit'])->name('contactos.edit');
+    Route::put('contactos/{datoPersonal}', [ContactoController::class, 'update'])->name('contactos.update');
 }); 

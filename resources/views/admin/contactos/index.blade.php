@@ -2,40 +2,50 @@
 
 @section('content')
 <div class="container">
-    <h1>Contactos</h1>
+    <h1 class="mb-4">Contactos</h1>
 
-    @if (session('success'))
-        <div class="alert alert-success">{{ session('success') }}</div>
-    @endif
+    <a href="{{ route('admin.contactos.create') }}" class="btn btn-primary mb-3">Crear/Actualizar Contactos</a>
 
-    <a href="{{ route('admin.contactos.create') }}" class="btn btn-primary mb-3">Nuevo Contacto</a>
-
-    <table class="table table-bordered table-hover">
+    <table class="table table-striped">
         <thead>
             <tr>
-                <th>Tipo</th>
-                <th>Valor</th>
-                <th style="width: 190px;">Acciones</th>
+                <th>Persona</th>
+                <th>Correo</th>
+                <th>Teléfono</th>
+                <th>LinkedIn</th>
+                <th>Google Maps</th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
-            @forelse($contactos as $contacto)
+            @forelse($filas as $f)
                 <tr>
-                    <td>{{ $contacto->tipo->nombre ?? 'N/A' }}</td>
-                    <td>{{ $contacto->valor }}</td>
+                    <td>{{ $f['persona']->nombre }} {{ $f['persona']->apellido }}</td>
+                    <td>{{ $f['correo'] ?? '—' }}</td>
+                    <td>{{ $f['telefono'] ?? '—' }}</td>
                     <td>
-                        <a href="{{ route('admin.contactos.edit', $contacto) }}" class="btn btn-sm btn-warning">Editar</a>
-                        <form action="{{ route('admin.contactos.destroy', $contacto) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este contacto?');">
-                            @csrf
-                            @method('DELETE')
-                            <button class="btn btn-sm btn-danger">Eliminar</button>
-                        </form>
+                        @if(!empty($f['linkedin']))
+                            <a href="{{ $f['linkedin'] }}" target="_blank">Perfil</a>
+                        @else
+                            —
+                        @endif
+                    </td>
+                    <td>
+                        @if(!empty($f['google_maps']))
+                            <a href="{{ $f['google_maps'] }}" target="_blank">Mapa</a>
+                        @else
+                            —
+                        @endif
+                    </td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-secondary"
+                           href="{{ route('admin.contactos.edit', $f['persona']) }}">
+                           Editar
+                        </a>
                     </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="3" class="text-center">No hay contactos cargados.</td>
-                </tr>
+                <tr><td colspan="6" class="text-center">Sin datos</td></tr>
             @endforelse
         </tbody>
     </table>

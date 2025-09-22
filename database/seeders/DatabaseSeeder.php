@@ -35,6 +35,8 @@ class DatabaseSeeder extends Seeder
             ComentarioSeeder::class,  // si depende de cliente/portafolio/etc., ya están arriba
         ]);
 
+        $this->call(\Database\Seeders\TipoContactoSeeder::class);
+
         // Si más adelante agregás otros (p. ej. PortafolioSeeder),
         // ubicalos aquí respetando dependencias (categoría/cliente primero).
     }

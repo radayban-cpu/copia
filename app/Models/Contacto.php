@@ -14,15 +14,20 @@ class Contacto extends Model
         'tipo_contacto_id',
     ];
 
-    // Relación: un contacto pertenece a una persona
     public function datoPersonal()
     {
-        return $this->belongsTo(DatoPersonal::class);
+        return $this->belongsTo(\App\Models\DatoPersonal::class, 'dato_personal_id');
     }
 
-    // Relación: un contacto pertenece a un tipo (Email, WhatsApp, etc.)
+    // 👇 ESTA relación debe existir con ESTE nombre
+    public function tipoContacto()
+    {
+        return $this->belongsTo(\App\Models\TipoContacto::class, 'tipo_contacto_id');
+    }
+
+    // (Opcional) alias por compatibilidad si en algún lado quedó "tipo"
     public function tipo()
     {
-        return $this->belongsTo(TipoContacto::class, 'tipo_contacto_id');
+        return $this->tipoContacto();
     }
 }

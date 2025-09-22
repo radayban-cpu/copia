@@ -3,9 +3,10 @@
 <header id="header" class="header d-flex align-items-center light-background sticky-top">
   <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
 
+<header id="header" class="header d-flex align-items-center light-background sticky-top">
+  <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
     <a href="{{ url('/') }}" class="logo d-flex align-items-center me-auto me-xl-0">
-      {{-- <img src="{{ asset('assets/img/logo.png') }}" alt=""> --}}
-      <h1 class="sitename">Kelly</h1>
+      <h1 class="sitename">{{ optional($datoPersonal)->nombre ?? 'Inicio' }}</h1>
     </a>
 
     {{-- El componente es kebab-case --}}

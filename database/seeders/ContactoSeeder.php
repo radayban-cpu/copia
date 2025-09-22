@@ -10,19 +10,19 @@ class ContactoSeeder extends Seeder
     public function run(): void
     {
         Contacto::create([
-            'valor' => 'tobias.molinas@example.com',
+            'valor' => 'matias_murto@example.com',
             'dato_personal_id' => 1, // id que ya existe en datos_personales
             'tipo_contacto_id' => 1, // Email
         ]);
 
         Contacto::create([
-            'valor' => '+595981234567',
+            'valor' => '+595982993406',
             'dato_personal_id' => 1,
             'tipo_contacto_id' => 2, // WhatsApp
         ]);
 
         Contacto::create([
-            'valor' => 'linkedin.com/in/tobias-molinas',
+            'valor' => 'https://www.linkedin.com/in/matias-murto-683353170/',
             'dato_personal_id' => 1,
             'tipo_contacto_id' => 3, // LinkedIn
         ]);

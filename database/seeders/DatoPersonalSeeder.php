@@ -14,11 +14,11 @@ class DatoPersonalSeeder extends Seeder
     public function run(): void
     {
         DatoPersonal::create([
-            'nombre'           => 'Tobias',
-            'apellido'         => 'Molinas',
-            'descripcion'      => 'Desarrollador Laravel',
-            'fecha_nacimiento' => '2000-05-15',
-            'ciudad_domicilio' => 'Asunción',
+            'nombre'           => 'Matias',
+            'apellido'         => 'Murto',
+            'descripcion'      => 'Desarrollador Python Jr',
+            'fecha_nacimiento' => '2000-12-18',
+            'ciudad_domicilio' => 'Capiata',
         ]);
     }
 }

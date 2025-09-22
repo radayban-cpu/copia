@@ -1,15 +1,7 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Nuevo Mensaje de Contacto</title>
-</head>
-<body>
-    <h2>Has recibido un nuevo mensaje desde tu portafolio:</h2>
-    <p><strong>Nombre:</strong> {{ $datos['name'] }}</p>
-    <p><strong>Email:</strong> {{ $datos['email'] }}</p>
-    <p><strong>Asunto:</strong> {{ $datos['subject'] }}</p>
-    <hr>
-    <p><strong>Mensaje:</strong></p>
-    <p>{{ $datos['message'] }}</p>
-</body>
-</html>
+<h2>Nuevo mensaje desde el formulario de contacto del curriculum</h2>
+
+<p><strong>Nombre:</strong> {{ $data['name'] }}</p>
+<p><strong>Email:</strong> {{ $data['email'] }}</p>
+<p><strong>Asunto:</strong> {{ $data['subject'] }}</p>
+<p><strong>Mensaje:</strong></p>
+<p>{{ $data['message'] }}</p>

@@ -50,7 +50,7 @@
   <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
 
     <a href="{{ url('/') }}" class="logo d-flex align-items-center me-auto me-xl-0">
-      <h1 class="sitename">Kelly</h1>
+      <h1 class="sitename">Matias</h1>
     </a>
 
     <x-nav-bar />
@@ -142,34 +142,56 @@
         </div>
 
         <div class="col-lg-7">
-          {{-- Mantengo el mismo form, traducido al español --}}
-          <form action="{{ asset('forms/contact.php') }}" method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="200">
+          {{-- Formulario conectado al Mailer de Laravel --}}
+          <form action="{{ route('contacto.enviar') }}" method="post" class="php-email-form" data-aos="fade-up" data-aos-delay="200" novalidate>
+            @csrf
+
+            {{-- Mensajes globales --}}
+            @if(session('success'))
+              <div class="alert alert-success">{{ session('success') }}</div>
+            @endif
+            @if($errors->any())
+              <div class="alert alert-danger">
+                <ul class="mb-0">
+                  @foreach($errors->all() as $e)
+                    <li>{{ $e }}</li>
+                  @endforeach
+                </ul>
+              </div>
+            @endif
+
             <div class="row gy-4">
 
               <div class="col-md-6">
                 <label for="name-field" class="pb-2">Tu nombre</label>
-                <input type="text" name="name" id="name-field" class="form-control" required>
+                <input type="text" name="name" id="name-field" class="form-control" value="{{ old('name') }}" required>
+                @error('name') <small class="text-danger">{{ $message }}</small> @enderror
               </div>
 
               <div class="col-md-6">
                 <label for="email-field" class="pb-2">Tu correo</label>
-                <input type="email" class="form-control" name="email" id="email-field" required>
+                <input type="email" class="form-control" name="email" id="email-field" value="{{ old('email') }}" required>
+                @error('email') <small class="text-danger">{{ $message }}</small> @enderror
               </div>
 
               <div class="col-md-12">
                 <label for="subject-field" class="pb-2">Asunto</label>
-                <input type="text" class="form-control" name="subject" id="subject-field" required>
+                <input type="text" class="form-control" name="subject" id="subject-field" value="{{ old('subject') }}" required>
+                @error('subject') <small class="text-danger">{{ $message }}</small> @enderror
               </div>
 
               <div class="col-md-12">
                 <label for="message-field" class="pb-2">Mensaje</label>
-                <textarea class="form-control" name="message" rows="10" id="message-field" required></textarea>
+                <textarea class="form-control" name="message" rows="10" id="message-field" required>{{ old('message') }}</textarea>
+                @error('message') <small class="text-danger">{{ $message }}</small> @enderror
               </div>
 
               <div class="col-md-12 text-center">
-                <div class="loading">Enviando…</div>
-                <div class="error-message"></div>
-                <div class="sent-message">¡Tu mensaje fue enviado. Gracias!</div>
+                {{-- Si usabas el script original del template, podes quitar estas tres líneas --}}
+                <div class="loading d-none">Enviando…</div>
+                <div class="error-message d-none"></div>
+                <div class="sent-message d-none">¡Tu mensaje fue enviado. Gracias!</div>
+
                 <button type="submit">Enviar mensaje</button>
               </div>
 

@@ -30,6 +30,9 @@ Route::controller(PagesController::class)->group(function () {
     Route::get('/servicios', 'servicios')->name('servicios');
 });
 
+// --- Ruta pública para enviar formulario de contacto (Mailer) ---
+Route::post('/contacto/enviar', [ContactoController::class, 'enviar'])->name('contacto.enviar');
+
 
 use Illuminate\Support\Facades\Storage;
 use App\Models\Imagen;
@@ -91,4 +94,4 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::post('contactos', [ContactoController::class, 'store'])->name('contactos.store');
     Route::get('contactos/{datoPersonal}/edit', [ContactoController::class, 'edit'])->name('contactos.edit');
     Route::put('contactos/{datoPersonal}', [ContactoController::class, 'update'])->name('contactos.update');
-}); 
+});

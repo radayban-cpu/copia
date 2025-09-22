@@ -3,7 +3,7 @@
 <header id="header" class="header d-flex align-items-center light-background sticky-top">
   <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
     <a href="{{ url('/') }}" class="logo d-flex align-items-center me-auto me-xl-0">
-      <h1 class="sitename">Kelly</h1>
+      <h1 class="sitename">{{ optional($datoPersonal)->nombre ?? 'Inicio' }}</h1>
     </a>
     <x-nav-bar />
     <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>

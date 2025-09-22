@@ -30,6 +30,20 @@ Route::controller(PagesController::class)->group(function () {
     Route::get('/servicios', 'servicios')->name('servicios');
 });
 
+
+use Illuminate\Support\Facades\Storage;
+use App\Models\Imagen;
+
+Route::get('/debug-foto', function () {
+    $avatar = Imagen::where('tipo_imagen_id', 1)->latest()->first();
+    $path   = $avatar?->path;
+    return [
+        'DB path' => $path,
+        'exists'  => $path ? Storage::disk('public')->exists($path) : 'N/A',
+        'url'     => $path ? asset('storage/'.$path) : null,
+    ];
+});
+
 /*
 |--------------------------------------------------------------------------
 | Rutas del Panel de Administración

@@ -34,23 +34,72 @@ class PagesController extends Controller
         ]);
     }
 
-    /** Página "Acerca de" */
-    public function acerca()
-    {
-        $datoPersonal = DatoPersonal::first();
-        $imagenPerfil = $this->getImagenUrlPorTipoId(1, true) ?? asset('assets/img/profile-img.jpg');
-        $imagenMuro   = $this->getImagenUrlPorTipo('muro');
+public function acerca()
+{
+    // Dato personal (como ya lo tenías)
+    $datoPersonal = DatoPersonal::with(['habilidades.tipo'])->first();
 
-        $habilidades = Habilidad::with('tipo')
-            ->where('dato_personal_id', optional($datoPersonal)->id)
-            ->orderBy('tipo_habilidad_id')
-            ->orderBy('nombre')
-            ->get();
-            
-        $comentarios = Comentario::with('cliente')->latest()->get();
-
-        return view('acerca-de', compact('datoPersonal', 'imagenPerfil', 'imagenMuro', 'habilidades', 'comentarios'));
+    // Foto (tal cual te funciona hoy)
+    $avatar = Imagen::where('tipo_imagen_id', 1)->latest()->first();
+    $fotoUrl = null;
+    if ($avatar && $avatar->ruta) {
+        $ruta = ltrim($avatar->ruta, '/');
+        $ruta = preg_replace('~^(storage/|public/)~', '', $ruta);
+        if (Storage::disk('public')->exists($ruta)) {
+            $fotoUrl = Storage::url($ruta);
+        }
     }
+    if (!$fotoUrl) {
+        $fotoUrl = asset('images/avatar.png');
+    }
+
+    // === HABILIDADES ===
+    // Si tu modelo usa campo "porcentaje" en vez de "nivel", el Blade actual lo convierto aquí:
+    $habilidades = ($datoPersonal?->habilidades ?? collect())->map(function ($h) {
+        $nivel = $h->nivel ?? $h->porcentaje ?? 0;
+        $h->nivel = (int) $nivel;
+        return $h;
+    });
+
+// === TESTIMONIOS con avatar ===
+$testimonios = Comentario::with('cliente')
+    ->latest()
+    ->take(6)
+    ->get()
+    ->map(function ($c) {
+        // Intentamos obtener algún campo de la tabla clientes que apunte al archivo:
+        //   - 'ruta' (ej: 'imagenes/archivo.png')
+        //   - 'foto' o 'avatar' (por si lo guardaste así)
+        $rawPath = $c->cliente->ruta
+            ?? $c->cliente->foto
+            ?? $c->cliente->avatar
+            ?? null;
+
+        $avatarUrl = null;
+        if ($rawPath) {
+            // normalizar y verificar en el disco 'public'
+            $p = ltrim($rawPath, '/');
+            $p = preg_replace('~^(storage/|public/)~', '', $p);
+            if (Storage::disk('public')->exists($p)) {
+                $avatarUrl = Storage::url($p); // /storage/...
+            }
+        }
+
+        // placeholder si no hay imagen válida
+        if (!$avatarUrl) {
+            $avatarUrl = asset('images/user-placeholder.png'); // poné un PNG en public/images/
+        }
+
+        return (object)[
+            'mensaje'    => $c->contenido ?? $c->mensaje ?? '',
+            'autor'      => $c->cliente->nombre ?? 'Anónimo',
+            'cargo'      => $c->cliente->cargo ?? null,
+            'avatar_url' => $avatarUrl,
+        ];
+    });
+
+    return view('acerca-de', compact('datoPersonal', 'fotoUrl', 'habilidades', 'testimonios'));
+}
 
     /** Página de contactos */
     public function contactos()

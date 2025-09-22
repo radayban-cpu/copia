@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models; // <-- ESTA LÍNEA ES LA CORRECCIÓN
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -28,5 +28,13 @@ class DatoPersonal extends Model
     public function habilidades()
     {
         return $this->hasMany(Habilidad::class);
+    }
+
+    /**
+     * NUEVA RELACIÓN: Un perfil personal tiene muchos servicios.
+     */
+    public function servicios()
+    {
+        return $this->hasMany(Servicio::class);
     }
 }

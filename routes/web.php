@@ -3,13 +3,16 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PagesController;
 
+// Controladores del Admin
 use App\Http\Controllers\Admin\DatoPersonalController;
 use App\Http\Controllers\Admin\ImagenController;
 use App\Http\Controllers\Admin\PortafolioController;
-/** --- INICIO ACTUALIZACIÓN --- */
-use App\Http\Controllers\Admin\ExperienciaController;   // controlador admin de experiencias
-use App\Http\Controllers\Admin\HabilidadController;     // ← NUEVO: controlador admin de habilidades
-/** --- FIN ACTUALIZACIÓN --- */
+use App\Http\Controllers\Admin\ExperienciaController;
+use App\Http\Controllers\Admin\HabilidadController;
+use App\Http\Controllers\Admin\ClienteController;
+use App\Http\Controllers\Admin\ComentarioController;
+use App\Http\Controllers\Admin\ServicioController;
+use App\Http\Controllers\Admin\ContactoController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,25 +42,35 @@ Route::prefix('admin')->name('admin.')->group(function () {
         return redirect()->route('admin.datos-personales.index');
     })->name('dashboard');
 
-    // Resource con parámetro claro para evitar "datos_personale"
+    // Datos Personales
     Route::resource('datos-personales', DatoPersonalController::class)
         ->except(['show', 'destroy'])
         ->parameters(['datos-personales' => 'dato_personal']);
 
-    // Imágenes (CRUD) → forzamos {imagen}
+    // Imágenes
     Route::resource('imagenes', ImagenController::class)
         ->parameters(['imagenes' => 'imagen']);
 
-    // Portafolios (CRUD) → {portafolio}
+    // Portafolios
     Route::resource('portafolios', PortafolioController::class)
         ->parameters(['portafolios' => 'portafolio']);
 
-    // Experiencias (CRUD) → {experiencia}
+    // Experiencias
     Route::resource('experiencias', ExperienciaController::class)
         ->parameters(['experiencias' => 'experiencia']);
 
-    // --- NUEVO: Habilidades (CRUD) → {habilidad}
+    // Habilidades
     Route::resource('habilidades', HabilidadController::class)
         ->parameters(['habilidades' => 'habilidad'])
         ->except(['show']);
-});
+
+    // Testimonios (Clientes y Comentarios)
+    Route::resource('clientes', ClienteController::class);
+    Route::resource('clientes.comentarios', ComentarioController::class)->shallow();
+
+    // Servicios
+    Route::resource('servicios', ServicioController::class);
+    
+    // --- RUTA DE CONTACTOS RESTAURADA A RESOURCE ---
+    Route::resource('contactos', ContactoController::class);
+}); 

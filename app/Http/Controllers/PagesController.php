@@ -13,6 +13,9 @@ use App\Models\DatoPersonal;
 use App\Models\Experiencia;
 use App\Models\TipoExperiencia;
 use App\Models\Imagen;
+use App\Models\Habilidad;
+use App\Models\Comentario;
+use App\Models\Servicio; // <-- NUEVO: Importar el modelo Servicio
 
 class PagesController extends Controller
 {
@@ -20,10 +23,7 @@ class PagesController extends Controller
     public function inicio()
     {
         $datoPersonal = DatoPersonal::first();
-
-        // Perfil: por ID de tipo (1)
-        $imagenPerfil = $this->getImagenUrlPorTipoId(1); // tipo_imagen_id = 1
-        // Muro: por nombre de tipo ('muro')
+        $imagenPerfil = $this->getImagenUrlPorTipoId(1);
         $imagenMuro   = $this->getImagenUrlPorTipo('muro');
 
         return view('inicio', [
@@ -38,14 +38,18 @@ class PagesController extends Controller
     public function acerca()
     {
         $datoPersonal = DatoPersonal::first();
-
-        // PERFIL por ID de tipo (1) con fallback a última imagen válida; si no, fallback del tema
         $imagenPerfil = $this->getImagenUrlPorTipoId(1, true) ?? asset('assets/img/profile-img.jpg');
-        // MURO por nombre
         $imagenMuro   = $this->getImagenUrlPorTipo('muro');
 
-        // Vista: resources/views/acerca.blade.php
-        return view('acerca-de', compact('datoPersonal', 'imagenPerfil', 'imagenMuro'));
+        $habilidades = Habilidad::with('tipo')
+            ->where('dato_personal_id', optional($datoPersonal)->id)
+            ->orderBy('tipo_habilidad_id')
+            ->orderBy('nombre')
+            ->get();
+            
+        $comentarios = Comentario::with('cliente')->latest()->get();
+
+        return view('acerca-de', compact('datoPersonal', 'imagenPerfil', 'imagenMuro', 'habilidades', 'comentarios'));
     }
 
     /** Página de contactos */
@@ -63,7 +67,6 @@ class PagesController extends Controller
     public function portafolio(Request $request)
     {
         $categorias = CategoriaPortafolio::orderBy('nombre')->get();
-
         $slug = $request->query('categoria');
         $categoriaSeleccionada = null;
         $categoriaId = null;
@@ -97,7 +100,6 @@ class PagesController extends Controller
     public function portafolioDetalle(string $slug = null)
     {
         $query = Portafolio::with('categoria');
-
         $item = $slug
             ? $query->where('slug', $slug)->first()
             : $query->latest()->first();
@@ -134,10 +136,14 @@ class PagesController extends Controller
     public function servicios()
     {
         $datoPersonal = DatoPersonal::first();
+        
+        // --- ¡AQUÍ ESTÁ LA ACTUALIZACIÓN! ---
+        $servicios = Servicio::where('dato_personal_id', optional($datoPersonal)->id)->latest()->get();
 
         return view('servicios', [
             'datoPersonal' => $datoPersonal,
             'datos'        => $datoPersonal,
+            'servicios'    => $servicios, // Pasamos los servicios a la vista
         ]);
     }
 
@@ -146,7 +152,6 @@ class PagesController extends Controller
      * ============================
      */
 
-    /** Devuelve el nombre de la columna de texto en tipos_imagenes */
     private function tipoImagenNombreCol(): ?string
     {
         if (Schema::hasColumn('tipos_imagenes', 'tipo_imagen')) {
@@ -158,10 +163,6 @@ class PagesController extends Controller
         return null;
     }
 
-    /**
-     * Busca la última imagen por **ID** de tipo y devuelve la URL pública.
-     * Si $fallbackLatest = true y no encuentra del tipo, intenta la última imagen válida en storage.
-     */
     private function getImagenUrlPorTipoId(int $tipoId, bool $fallbackLatest = false): ?string
     {
         $img = Imagen::query()
@@ -177,14 +178,9 @@ class PagesController extends Controller
             return $url;
         }
 
-        // Fallback: última imagen que exista realmente en el disco 'public'
         return $this->getUltimaImagenValidaUrl();
     }
 
-    /**
-     * Busca la última imagen por **NOMBRE** de tipo ('muro', etc.) y devuelve la URL pública.
-     * Usa TRIM + LOWER para tolerar espacios/caso en la BD.
-     */
     private function getImagenUrlPorTipo(string $nombreTipo): ?string
     {
         $col = $this->tipoImagenNombreCol();
@@ -205,7 +201,6 @@ class PagesController extends Controller
         return $this->toPublicUrl($img->ruta ?? null);
     }
 
-    /** Devuelve la URL pública de la última imagen que exista realmente en storage/public */
     private function getUltimaImagenValidaUrl(): ?string
     {
         $ultima = Imagen::orderByDesc(Schema::hasColumn('imagenes','created_at') ? 'created_at' : 'id')
@@ -221,14 +216,6 @@ class PagesController extends Controller
         return $ultima ? $this->toPublicUrl($ultima->ruta) : null;
     }
 
-    /**
-     * Normaliza 'ruta' y devuelve una URL pública correcta SOLO si el archivo existe.
-     * Admite:
-     * - public/imagenes/archivo.jpg  → /storage/imagenes/archivo.jpg
-     * - storage/imagenes/archivo.jpg → /storage/imagenes/archivo.jpg
-     * - /storage/imagenes/archivo.jpg → /storage/imagenes/archivo.jpg
-     * - images/... | assets/... | img/... (carpeta pública del theme)
-     */
     private function toPublicUrl(?string $ruta): ?string
     {
         if (!$ruta) return null;
@@ -236,29 +223,24 @@ class PagesController extends Controller
         $ruta = trim($ruta);
         $ruta = ltrim($ruta, '/');
 
-        // 1) URLs absolutas o data URI
         if (Str::startsWith($ruta, ['http://','https://','data:'])) {
             return $ruta;
         }
 
-        // 2) Paths del theme en /public
         if (Str::startsWith($ruta, ['images/','assets/','img/'])) {
             return file_exists(public_path($ruta)) ? asset($ruta) : null;
         }
 
-        // 3) /storage/... (o storage/...)
         if (Str::startsWith('/'.$ruta, '/storage/')) {
-            $rel = ltrim(substr('/'.$ruta, 9), '/'); // después de /storage/
+            $rel = ltrim(substr('/'.$ruta, 9), '/');
             return Storage::disk('public')->exists($rel) ? asset('storage/'.$rel) : null;
         }
 
-        // 4) public/imagenes/...
         if (Str::startsWith($ruta, 'public/')) {
-            $rel = substr($ruta, 7); // quitar 'public/'
+            $rel = substr($ruta, 7);
             return Storage::disk('public')->exists($rel) ? asset('storage/'.$rel) : null;
         }
 
-        // 5) Ruta cruda típica: imagenes/archivo.jpg en el disco 'public'
         return Storage::disk('public')->exists($ruta) ? asset('storage/'.$ruta) : null;
     }
 }

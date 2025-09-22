@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Cliente extends Model
 {
-    protected $table = 'clientes';
+    use HasFactory;
 
     protected $fillable = [
         'nombre',
@@ -15,9 +16,12 @@ class Cliente extends Model
         'telefono',
     ];
 
-    // Relación: un cliente puede tener muchos comentarios
+    /**
+     * Define la relación "uno a muchos" con los comentarios.
+     * Un cliente puede tener muchos comentarios (testimonios).
+     */
     public function comentarios()
     {
-        return $this->hasMany(Comentario::class, 'cliente_id');
+        return $this->hasMany(Comentario::class);
     }
 }

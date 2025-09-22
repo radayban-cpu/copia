@@ -1,49 +1,67 @@
 <x-layout />
 
 <header id="header" class="header d-flex align-items-center light-background sticky-top">
-  <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
+    <div class="container-fluid position-relative d-flex align-items-center justify-content-between">
 
-    <a href="{{ url('/') }}" class="logo d-flex align-items-center me-auto me-xl-0">
-      {{-- <img src="{{ asset('assets/img/logo.png') }}" alt=""> --}}
-      <h1 class="sitename">Kelly</h1>
-    </a>
+        <a href="{{ url('/') }}" class="logo d-flex align-items-center me-auto me-xl-0">
+            {{-- Usamos el nombre del dato personal si existe --}}
+            <h1 class="sitename">{{ optional($datoPersonal)->nombre ?? 'Inicio' }}</h1>
+        </a>
 
-    {{-- Componente en kebab-case --}}
-    <x-nav-bar />
+        <x-nav-bar />
 
-    <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
 
-    <div class="header-social-links">
-      <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
-      <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
-      <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
-      <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+        <div class="header-social-links">
+            <a href="#" class="twitter"><i class="bi bi-twitter-x"></i></a>
+            <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
+            <a href="#" class="instagram"><i class="bi bi-instagram"></i></a>
+            <a href="#" class="linkedin"><i class="bi bi-linkedin"></i></a>
+        </div>
+
     </div>
-
-  </div>
 </header>
 
 <main class="main">
 
-  <!-- Services Section -->
-  <section id="services" class="services section">
+    <section id="services" class="services section">
 
-    <!-- Section Title -->
-    <div class="container section-title" data-aos="fade-up">
-      <h2>Services</h2>
-      <p>Necessitatibus eius consequatur ex aliquid fuga eum quidem sint consectetur velit</p>
-    </div>
-    <!-- End Section Title -->
+        <div class="container section-title" data-aos="fade-up">
+            <h2>Servicios</h2>
+            <p>Aquí puedes encontrar los servicios que ofrezco para ayudarte a alcanzar tus objetivos.</p>
+        </div>
+        <div class="container">
+            <div class="row gy-4">
 
-    <div class="container">
+                @forelse($servicios as $index => $servicio)
+                    <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ ($index % 3 + 1) * 100 }}">
+                        <div class="service-item item-cyan position-relative">
+                            <div class="icon">
+                                {{-- El SVG es solo un fondo decorativo, el icono real es el <i> --}}
+                                <svg width="100" height="100" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke="none" stroke-width="0" fill="#f5f5f5" d="M300,521.0016835830174C376.1290562159157,517.8887921683347,466.0731472004068,529.7835943286574,510.70327084640275,468.03025145048787C554.3714126377745,407.6079735673963,508.03601936045806,328.9844924480964,491.2728898941984,256.3432110539036C474.5976632858925,184.082847569629,479.9380746630129,96.60480741107993,416.23090153303,58.64404602377083C348.86323505073057,18.502131276798302,261.93793281208167,40.57373210992963,193.5410806939664,78.93577620505333C130.42746243093433,114.334589627462,98.30271207620316,179.96522072025542,76.75703585869454,249.04625023123273C51.97151888228291,328.5150500222984,13.704378332031375,421.85034740162234,66.52175969318436,486.19268352777647C119.04800174914682,550.1803526380478,217.28368757567262,524.383925680826,300,521.0016835830174"></path>
+                                </svg>
+                                <i class="bi {{ $servicio->icono }}"></i>
+                            </div>
+                            <h3>{{ $servicio->titulo }}</h3>
+                            <p>{{ $servicio->descripcion }}</p>
+                        </div>
+                    </div>@empty
+                    <div class="col-12">
+                        <p class="text-center text-muted">Aún no se han cargado servicios desde el panel de administración.</p>
+                    </div>
+                @endforelse
 
-      <div class="row gy-4">
-
-        <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
-          <div class="service-item item-cyan position-relative">
-            <div class="icon">
-              <svg width="100" height="100" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
-                <path stroke="none" stroke-width="0" fill="#f5f5f5" d="M300,521.0016835830174C376.1290562159157,517.8887921683347,466.0731472004068,529.7835943286574,510.70327084640275,468.03025145048787C554.3714126377745,407.6079735673963,508.03601936045806,328.9844924480964,491.2728898941984,256.3432110539036C474.5976632858925,184.082847569629,479.9380746630129,96.60480741107993,416.23090153303,58.64404602377083C348.86323505073057,18.502131276798302,261.93793281208167,40.57373210992963,193.5410806939664,78.93577620505333C130.42746243093433,114.334589627462,98.30271207620316,179.96522072025542,76.75703585869454,249.04625023123273C51.97151888228291,328.5150500222984,13.704378332031375,421.85034740162234,66.52175969318436,486.19268352777647C119.04800174914682,550.1803526380478,217.28368757567262,524.383925680826,300,521.0016835830174"></path>
-              </svg>
-              <i class="bi bi-activity"></i>
             </div>
+
+        </div>
+
+    </section></main>
+
+<x-footer />
+
+<a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+</a>
+
+<div id="preloader"></div>

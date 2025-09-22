@@ -1,8 +1,7 @@
-{{-- resources/views/admin/layout.blade.php --}}
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    <meta charset="utf-8"> {{-- corregido utf-8 --}}
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -55,12 +54,36 @@
                         Portafolios
                     </a>
                 </li>
-
-                {{-- NUEVO: Experiencias --}}
+                <li>
+                    <a href="{{ route('admin.servicios.index') }}" class="nav-link text-white {{ request()->routeIs('admin.servicios.*') ? 'active' : '' }}">
+                        <i class="bi bi-gear-wide-connected me-2"></i>
+                        Servicios
+                    </a>
+                </li>
                 <li>
                     <a href="{{ route('admin.experiencias.index') }}" class="nav-link text-white {{ request()->routeIs('admin.experiencias.*') ? 'active' : '' }}">
                         <i class="bi bi-journal-text me-2"></i>
                         Experiencias
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.habilidades.index') }}" class="nav-link text-white {{ request()->routeIs('admin.habilidades.*') ? 'active' : '' }}">
+                        <i class="bi bi-star me-2"></i>
+                        Habilidades
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ route('admin.clientes.index') }}" class="nav-link text-white {{ request()->routeIs('admin.clientes.*') || request()->routeIs('admin.comentarios.*') ? 'active' : '' }}">
+                        <i class="bi bi-chat-quote-fill me-2"></i>
+                        Testimonios
+                    </a>
+                </li>
+
+                {{-- NUEVO: Contactos --}}
+       <li>
+                    <a href="{{ route('admin.contactos.index') }}" class="nav-link text-white {{ request()->routeIs('admin.contactos.*') ? 'active' : '' }}">
+                        <i class="bi bi-telephone-fill me-2"></i>
+                        Contactos
                     </a>
                 </li>
 

@@ -15,24 +15,27 @@
         </div>
     @endif
 
-    {{-- --- INICIO DE LA ACTUALIZACIÓN --- --}}
-    {{-- 1. Añadir enctype="multipart/form-data" para permitir la subida de archivos --}}
-    <form action="{{ route('admin.imagenes.update', $imagen->id) }}" method="POST" enctype="multipart/form-data">
+    {{-- Formulario de actualización --}}
+    <form action="{{ route('admin.imagenes.update', $imagen) }}" method="POST" enctype="multipart/form-data">
         @csrf
-        {{-- 2. Usar el método PUT para la actualización, como espera Laravel --}}
         @method('PUT')
 
         <div class="form-group mb-3">
             <label for="descripcion">Descripción</label>
-            <input type="text" name="descripcion" id="descripcion" class="form-control" value="{{ old('descripcion', $imagen->descripcion) }}">
+            <input
+                type="text"
+                name="descripcion"
+                id="descripcion"
+                class="form-control"
+                value="{{ old('descripcion', $imagen->descripcion) }}"
+            >
         </div>
 
         <div class="form-group mb-3">
             <label for="tipo_imagen_id">Tipo de Imagen</label>
             <select name="tipo_imagen_id" id="tipo_imagen_id" class="form-control" required>
                 @foreach($tipos as $tipo)
-                    {{-- Marcar como seleccionado el tipo de imagen actual --}}
-                    <option value="{{ $tipo->id }}" {{ $imagen->tipo_imagen_id == $tipo->id ? 'selected' : '' }}>
+                    <option value="{{ $tipo->id }}" {{ (old('tipo_imagen_id', $imagen->tipo_imagen_id) == $tipo->id) ? 'selected' : '' }}>
                         {{ $tipo->tipo_imagen }}
                     </option>
                 @endforeach
@@ -42,8 +45,8 @@
         <div class="form-group mb-3">
             <label for="ruta">Cambiar Imagen (Opcional)</label>
             <input type="file" name="ruta" id="ruta" class="form-control">
-            
-            {{-- 3. Mostrar la imagen actual para que el usuario vea lo que está editando --}}
+
+            {{-- Mostrar la imagen actual --}}
             @if($imagen->ruta)
                 <div class="mt-2">
                     <p>Imagen actual:</p>
@@ -55,6 +58,5 @@
         <button type="submit" class="btn btn-primary">Actualizar Imagen</button>
         <a href="{{ route('admin.imagenes.index') }}" class="btn btn-secondary">Cancelar</a>
     </form>
-    {{-- --- FIN DE LA ACTUALIZACIÓN --- --}}
 </div>
 @endsection

@@ -2,11 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\PagesController;
+
 use App\Http\Controllers\Admin\DatoPersonalController;
 use App\Http\Controllers\Admin\ImagenController;
 use App\Http\Controllers\Admin\PortafolioController;
 /** --- INICIO ACTUALIZACIÓN --- */
-use App\Http\Controllers\Admin\ExperienciaController; // ← NUEVO: controlador admin de experiencias
+use App\Http\Controllers\Admin\ExperienciaController;   // controlador admin de experiencias
+use App\Http\Controllers\Admin\HabilidadController;     // ← NUEVO: controlador admin de habilidades
 /** --- FIN ACTUALIZACIÓN --- */
 
 /*
@@ -32,26 +34,30 @@ Route::controller(PagesController::class)->group(function () {
 */
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    
+
     Route::get('/', function () {
         return redirect()->route('admin.datos-personales.index');
     })->name('dashboard');
 
-    // --- INICIO DE LA ACTUALIZACIÓN ---
     // Resource con parámetro claro para evitar "datos_personale"
     Route::resource('datos-personales', DatoPersonalController::class)
         ->except(['show', 'destroy'])
         ->parameters(['datos-personales' => 'dato_personal']);
-    // --- FIN DE LA ACTUALIZACIÓN ---
 
-    // Rutas para Imágenes (CRUD completo)
-    Route::resource('imagenes', ImagenController::class);
+    // Imágenes (CRUD) → forzamos {imagen}
+    Route::resource('imagenes', ImagenController::class)
+        ->parameters(['imagenes' => 'imagen']);
 
-    // Rutas para Portafolios (CRUD completo)
-    Route::resource('portafolios', PortafolioController::class);
+    // Portafolios (CRUD) → {portafolio}
+    Route::resource('portafolios', PortafolioController::class)
+        ->parameters(['portafolios' => 'portafolio']);
 
-    /** --- INICIO ACTUALIZACIÓN --- */
-    // Rutas para Experiencias (CRUD completo)
-    Route::resource('experiencias', ExperienciaController::class); // ← NUEVO
-    /** --- FIN ACTUALIZACIÓN --- */
+    // Experiencias (CRUD) → {experiencia}
+    Route::resource('experiencias', ExperienciaController::class)
+        ->parameters(['experiencias' => 'experiencia']);
+
+    // --- NUEVO: Habilidades (CRUD) → {habilidad}
+    Route::resource('habilidades', HabilidadController::class)
+        ->parameters(['habilidades' => 'habilidad'])
+        ->except(['show']);
 });

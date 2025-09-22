@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 use App\Models\Portafolio;
 use App\Models\CategoriaPortafolio;
@@ -20,15 +21,14 @@ class PagesController extends Controller
     {
         $datoPersonal = DatoPersonal::first();
 
-        // --- INICIO DE LA ACTUALIZACIÓN ---
-        // Se busca el tipo de imagen 'portada', que es el nombre correcto en la base de datos.
-        $imagenPerfil = $this->getImagenUrlPorTipo('perfil');
-        $imagenMuro   = $this->getImagenUrlPorTipo('portada'); // <-- ESTA ES LA ÚNICA LÍNEA CAMBIADA
-        // --- FIN DE LA ACTUALIZACIÓN ---
+        // Perfil: por ID de tipo (1)
+        $imagenPerfil = $this->getImagenUrlPorTipoId(1); // tipo_imagen_id = 1
+        // Muro: por nombre de tipo ('muro')
+        $imagenMuro   = $this->getImagenUrlPorTipo('muro');
 
         return view('inicio', [
             'datoPersonal' => $datoPersonal,
-            'datos'        => $datoPersonal,   // alias usado en la vista
+            'datos'        => $datoPersonal,
             'imagenPerfil' => $imagenPerfil,
             'imagenMuro'   => $imagenMuro,
         ]);
@@ -39,15 +39,13 @@ class PagesController extends Controller
     {
         $datoPersonal = DatoPersonal::first();
 
-        $imagenPerfil = $this->getImagenUrlPorTipo('perfil');
-        $imagenMuro   = $this->getImagenUrlPorTipo('portada'); // Corregido aquí también por consistencia
+        // PERFIL por ID de tipo (1) con fallback a última imagen válida; si no, fallback del tema
+        $imagenPerfil = $this->getImagenUrlPorTipoId(1, true) ?? asset('assets/img/profile-img.jpg');
+        // MURO por nombre
+        $imagenMuro   = $this->getImagenUrlPorTipo('muro');
 
-        return view('acerca-de', [
-            'datoPersonal' => $datoPersonal,
-            'datos'        => $datoPersonal,
-            'imagenPerfil' => $imagenPerfil,
-            'imagenMuro'   => $imagenMuro,
-        ]);
+        // Vista: resources/views/acerca.blade.php
+        return view('acerca-de', compact('datoPersonal', 'imagenPerfil', 'imagenMuro'));
     }
 
     /** Página de contactos */
@@ -61,9 +59,7 @@ class PagesController extends Controller
         ]);
     }
 
-    /**
-     * Página pública de Portafolio.
-     */
+    /** Página pública de Portafolio */
     public function portafolio(Request $request)
     {
         $categorias = CategoriaPortafolio::orderBy('nombre')->get();
@@ -97,9 +93,7 @@ class PagesController extends Controller
         ]);
     }
 
-    /**
-     * Detalle de un proyecto del portafolio.
-     */
+    /** Detalle de un proyecto del portafolio */
     public function portafolioDetalle(string $slug = null)
     {
         $query = Portafolio::with('categoria');
@@ -119,7 +113,7 @@ class PagesController extends Controller
         ]);
     }
 
-    /** Página de resumen/CV — lee experiencias desde BD */
+    /** Página de resumen/CV */
     public function resumen()
     {
         $datoPersonal = DatoPersonal::first();
@@ -152,58 +146,119 @@ class PagesController extends Controller
      * ============================
      */
 
-    /**
-     * Devuelve el nombre de la columna de texto en tipos_imagenes
-     */
+    /** Devuelve el nombre de la columna de texto en tipos_imagenes */
     private function tipoImagenNombreCol(): ?string
     {
-        // Se usa 'tipo_imagen' directamente ya que conocemos el nombre de la columna
         if (Schema::hasColumn('tipos_imagenes', 'tipo_imagen')) {
             return 'tipo_imagen';
         }
-        // Fallback por si cambia el nombre en el futuro
         foreach (['nombre', 'tipo', 'name', 'titulo', 'slug'] as $col) {
-            if (Schema::hasColumn('tipos_imagenes', $col)) {
-                return $col;
-            }
+            if (Schema::hasColumn('tipos_imagenes', $col)) return $col;
         }
         return null;
     }
 
     /**
-     * Busca la última imagen por tipo y devuelve la URL pública.
+     * Busca la última imagen por **ID** de tipo y devuelve la URL pública.
+     * Si $fallbackLatest = true y no encuentra del tipo, intenta la última imagen válida en storage.
+     */
+    private function getImagenUrlPorTipoId(int $tipoId, bool $fallbackLatest = false): ?string
+    {
+        $img = Imagen::query()
+            ->where('tipo_imagen_id', $tipoId)
+            ->when(Schema::hasColumn('imagenes', 'created_at'),
+                fn ($q) => $q->orderByDesc('created_at'),
+                fn ($q) => $q->orderByDesc('id')
+            )
+            ->first();
+
+        $url = $this->toPublicUrl($img->ruta ?? null);
+        if ($url || !$fallbackLatest) {
+            return $url;
+        }
+
+        // Fallback: última imagen que exista realmente en el disco 'public'
+        return $this->getUltimaImagenValidaUrl();
+    }
+
+    /**
+     * Busca la última imagen por **NOMBRE** de tipo ('muro', etc.) y devuelve la URL pública.
+     * Usa TRIM + LOWER para tolerar espacios/caso en la BD.
      */
     private function getImagenUrlPorTipo(string $nombreTipo): ?string
     {
         $col = $this->tipoImagenNombreCol();
-        if (!$col) {
-            return null; // No se puede buscar si no se encuentra la columna de nombre
-        }
+        if (!$col) return null;
 
-        $query = Imagen::query()
+        $buscado = Str::lower(trim($nombreTipo));
+
+        $img = Imagen::query()
             ->select('imagenes.ruta')
             ->join('tipos_imagenes', 'tipos_imagenes.id', '=', 'imagenes.tipo_imagen_id')
-            ->whereRaw("LOWER(tipos_imagenes.$col) = ?", [Str::lower($nombreTipo)]);
-        
-        if (Schema::hasColumn('imagenes', 'created_at')) {
-            $query->orderByDesc('imagenes.created_at');
-        } else {
-            $query->orderByDesc('imagenes.id');
-        }
+            ->whereRaw("LOWER(TRIM(tipos_imagenes.$col)) = ?", [$buscado])
+            ->when(Schema::hasColumn('imagenes', 'created_at'),
+                fn ($q) => $q->orderByDesc('imagenes.created_at'),
+                fn ($q) => $q->orderByDesc('imagenes.id')
+            )
+            ->first();
 
-        $img = $query->first();
+        return $this->toPublicUrl($img->ruta ?? null);
+    }
 
-        if (!$img || empty($img->ruta)) {
-            return null;
-        }
+    /** Devuelve la URL pública de la última imagen que exista realmente en storage/public */
+    private function getUltimaImagenValidaUrl(): ?string
+    {
+        $ultima = Imagen::orderByDesc(Schema::hasColumn('imagenes','created_at') ? 'created_at' : 'id')
+            ->get()
+            ->first(function ($i) {
+                if (!$i->ruta) return false;
+                $r = ltrim($i->ruta, '/');
+                if (Str::startsWith($r, 'public/')) $r = substr($r, 7);
+                if (Str::startsWith('/'.$r, '/storage/')) $r = ltrim(substr('/'.$r, 9), '/');
+                return Storage::disk('public')->exists($r);
+            });
 
-        $ruta = (string) $img->ruta;
+        return $ultima ? $this->toPublicUrl($ultima->ruta) : null;
+    }
 
-        if (Str::startsWith($ruta, ['http://', 'https://', '/'])) {
+    /**
+     * Normaliza 'ruta' y devuelve una URL pública correcta SOLO si el archivo existe.
+     * Admite:
+     * - public/imagenes/archivo.jpg  → /storage/imagenes/archivo.jpg
+     * - storage/imagenes/archivo.jpg → /storage/imagenes/archivo.jpg
+     * - /storage/imagenes/archivo.jpg → /storage/imagenes/archivo.jpg
+     * - images/... | assets/... | img/... (carpeta pública del theme)
+     */
+    private function toPublicUrl(?string $ruta): ?string
+    {
+        if (!$ruta) return null;
+
+        $ruta = trim($ruta);
+        $ruta = ltrim($ruta, '/');
+
+        // 1) URLs absolutas o data URI
+        if (Str::startsWith($ruta, ['http://','https://','data:'])) {
             return $ruta;
         }
 
-        return asset('storage/' . ltrim($ruta, '/'));
+        // 2) Paths del theme en /public
+        if (Str::startsWith($ruta, ['images/','assets/','img/'])) {
+            return file_exists(public_path($ruta)) ? asset($ruta) : null;
+        }
+
+        // 3) /storage/... (o storage/...)
+        if (Str::startsWith('/'.$ruta, '/storage/')) {
+            $rel = ltrim(substr('/'.$ruta, 9), '/'); // después de /storage/
+            return Storage::disk('public')->exists($rel) ? asset('storage/'.$rel) : null;
+        }
+
+        // 4) public/imagenes/...
+        if (Str::startsWith($ruta, 'public/')) {
+            $rel = substr($ruta, 7); // quitar 'public/'
+            return Storage::disk('public')->exists($rel) ? asset('storage/'.$rel) : null;
+        }
+
+        // 5) Ruta cruda típica: imagenes/archivo.jpg en el disco 'public'
+        return Storage::disk('public')->exists($ruta) ? asset('storage/'.$ruta) : null;
     }
 }
-

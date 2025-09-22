@@ -2,25 +2,40 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * Ejecuta todos los seeders del proyecto en un orden seguro.
      */
     public function run(): void
     {
-        // --- INICIO DE LA ACTUALIZACIÓN ---
-        // El orden es importante: primero tipos/tablas de referencia.
+        // 1) Tablas de catálogos / tipos (no dependen de nada)
         $this->call([
-            TipoExperienciasSeeder::class,   // ← NUEVO: tipos_experiencias
             TipoImagenSeeder::class,
+            TipoHabilidadSeeder::class,
+            TipoExperienciasSeeder::class,
+            TipoContactoSeeder::class,
             CategoriaPortafolioSeeder::class,
-            // ServicioSeeder::class, // Déjalo comentado si aún no hay DatoPersonal
         ]);
-        // --- FIN DE LA ACTUALIZACIÓN ---
+
+        // 2) Entidades base que otras usan como FK
+        $this->call([
+            DatoPersonalSeeder::class,
+            PerfilSeeder::class,      // si usa dato_personal_id, debe ir después de DatoPersonal
+            ClienteSeeder::class,
+        ]);
+
+        // 3) Entidades que dependen de los tipos/base
+        $this->call([
+            HabilidadSeeder::class,   // requiere tipos_habilidades + dato_personal
+            ExperienciaSeeder::class, // requiere tipos_experiencias + dato_personal
+            ContactoSeeder::class,    // requiere tipo_contacto (+ cliente si tu modelo lo referencia)
+            ComentarioSeeder::class,  // si depende de cliente/portafolio/etc., ya están arriba
+        ]);
+
+        // Si más adelante agregás otros (p. ej. PortafolioSeeder),
+        // ubicalos aquí respetando dependencias (categoría/cliente primero).
     }
 }

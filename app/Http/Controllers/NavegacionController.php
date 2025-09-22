@@ -76,7 +76,7 @@ class NavegacionController extends Controller
         $dato = DatoPersonal::first();
 
         $imagenMuro = Imagen::whereHas('tipo', function ($query) {
-            $query->whereRaw('LOWER(tipo_imagen) = ?', ['portada']);
+             $query->whereRaw('LOWER(tipo_imagen) = ?', ['muro']);
         })->latest()->first();
 
         $imagenPerfil = Imagen::whereHas('tipo', function ($query) {
